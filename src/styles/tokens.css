@@ -1,0 +1,69 @@
+:root {
+  /* Brand colors — locked, do not add new hex values here. */
+  --color-bg: #fbfaf8;
+  --color-ink: #1c1917;
+  --color-accent: #ad4319;
+
+  /* Derived neutrals — computed from the three colors above via color-mix()
+     rather than hand-picked hex values, so a future dark theme can swap
+     --color-bg/--color-ink at the root and have every neutral recompute
+     instead of needing a second hand-maintained palette. */
+  --color-border: color-mix(in srgb, var(--color-ink) 12%, var(--color-bg));
+  --color-ink-muted: color-mix(in srgb, var(--color-ink) 65%, var(--color-bg));
+  --color-surface: color-mix(in srgb, var(--color-ink) 4%, var(--color-bg));
+  --color-accent-surface: color-mix(
+    in srgb,
+    var(--color-accent) 8%,
+    var(--color-bg)
+  );
+
+  /* Verified WCAG contrast (checked, not assumed):
+     ink on bg          16.77:1  (AAA)
+     accent on bg         5.60:1  (AA normal text)
+     white on accent       5.84:1  (AA normal text — for filled accent buttons)
+     accent on ink         2.99:1  (FAILS AA — never put accent text on ink) */
+
+  /* Type — Zilla Slab for headings, IBM Plex Sans for body/UI,
+     IBM Plex Mono for nav/tags/technical-register accents. */
+  --font-heading: 'Zilla Slab', Georgia, serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Type scale — roughly modular (~1.25-1.3 steps), rounded to clean rem
+     values. Proposed default; flagged for sign-off, easy to retune since
+     nothing else references raw font-size values directly. */
+  --text-xs: 0.75rem; /* 12px — captions, fine print */
+  --text-sm: 0.875rem; /* 14px — nav labels, small UI text */
+  --text-base: 1rem; /* 16px — body copy */
+  --text-lg: 1.25rem; /* 20px — lead paragraphs */
+  --text-xl: 1.625rem; /* 26px — h3 */
+  --text-2xl: 2rem; /* 32px — h2 */
+  --text-3xl: 2.75rem; /* 44px — h1 */
+  --text-4xl: 3.5rem; /* 56px — hero/display, homepage only */
+
+  --leading-tight: 1.15; /* headings */
+  --leading-snug: 1.4; /* short UI text */
+  --leading-normal: 1.65; /* body copy / prose */
+
+  /* Spacing — 8px grid with a 4px half-step for fine adjustments. */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem; /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem; /* 16px */
+  --space-5: 1.5rem; /* 24px */
+  --space-6: 2rem; /* 32px */
+  --space-7: 3rem; /* 48px */
+  --space-8: 4rem; /* 64px */
+  --space-9: 6rem; /* 96px */
+
+  /* Motion — purposeful only (see base.css's reduced-motion override).
+     Components should read these rather than hardcoding durations. */
+  --motion-duration-fast: 120ms;
+  --motion-duration-base: 200ms;
+  --motion-duration-slow: 500ms;
+  --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Radius — small and consistent; badges, buttons, cards. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+}
