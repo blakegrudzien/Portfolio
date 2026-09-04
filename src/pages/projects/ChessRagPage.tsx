@@ -1,6 +1,65 @@
 import { CaseStudyShell } from '../../components/case-study/CaseStudyShell'
 import { CaseStudySection } from '../../components/case-study/CaseStudySection'
+import { ExpandablePanelList } from '../../components/common/ExpandablePanelList'
 import styles from './ChessRagPage.module.css'
+
+const architectureLayers = [
+  {
+    id: 'sql',
+    title: 'SQL — game statistics',
+    children: (
+      <p>
+        Direct queries over 127,435 games and 10.2 million moves for anything
+        statistical: win rates, opening frequencies, move-count trends.
+      </p>
+    ),
+  },
+  {
+    id: 'vector-rag',
+    title: 'Vector RAG — annotated commentary',
+    children: (
+      <p>
+        pgvector search over 468,862 chunks of annotated commentary, embedded
+        with Voyage AI's voyage-4 (1024-dim), for conceptual "why is this good"
+        questions.
+      </p>
+    ),
+  },
+  {
+    id: 'engine',
+    title: 'Engine evaluation — Stockfish',
+    children: (
+      <p>
+        Real Stockfish analysis through a pool of subprocesses, run concurrently
+        so multiple requests don't queue behind each other. The model never
+        judges a position itself — every tactical claim in a chat response cites
+        an actual engine call.
+      </p>
+    ),
+  },
+  {
+    id: 'similarity',
+    title: 'Structural similarity — opening matching',
+    children: (
+      <p>
+        Opening-move-prefix matching against the game database, surfaced as
+        "games that started like this." Explicitly labeled illustrative rather
+        than authoritative — it matches move sequences, not chess understanding.
+      </p>
+    ),
+  },
+  {
+    id: 'recommendations',
+    title: 'Recommendations — study filtering',
+    children: (
+      <p>
+        A separate agent filters scraped Lichess studies through a
+        gradient-boosted classifier (0.887 cross-validated ROC-AUC on 184
+        hand-labeled examples) before surfacing them.
+      </p>
+    ),
+  },
+]
 
 const demoLink = {
   label: 'Live demo',
@@ -39,36 +98,7 @@ export function ChessRagPage() {
           classifier, not LangChain or LlamaIndex — decides which backend a
           question actually needs, and can call more than one.
         </p>
-        <ol>
-          <li>
-            <strong>SQL.</strong> Direct queries over 127,435 games and 10.2
-            million moves for anything statistical: win rates, opening
-            frequencies, move-count trends.
-          </li>
-          <li>
-            <strong>Vector RAG.</strong> pgvector search over 468,862 chunks of
-            annotated commentary, embedded with Voyage AI's voyage-4 (1024-dim),
-            for conceptual "why is this good" questions.
-          </li>
-          <li>
-            <strong>Engine evaluation.</strong> Real Stockfish analysis through
-            a pool of subprocesses, run concurrently so multiple requests don't
-            queue behind each other. The model never judges a position itself —
-            every tactical claim in a chat response cites an actual engine call.
-          </li>
-          <li>
-            <strong>Structural similarity.</strong> Opening-move-prefix matching
-            against the game database, surfaced as "games that started like
-            this." Explicitly labeled illustrative rather than authoritative —
-            it matches move sequences, not chess understanding.
-          </li>
-          <li>
-            <strong>Recommendations.</strong> A separate agent filters scraped
-            Lichess studies through a gradient-boosted classifier (0.887
-            cross-validated ROC-AUC on 184 hand-labeled examples) before
-            surfacing them.
-          </li>
-        </ol>
+        <ExpandablePanelList panels={architectureLayers} defaultOpenId="sql" />
       </CaseStudySection>
 
       <CaseStudySection heading="Design decisions">

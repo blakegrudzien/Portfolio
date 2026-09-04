@@ -1,0 +1,46 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* Custom +/− marker replaces the native disclosure triangle, hidden below
+   via list-style (Firefox) and ::-webkit-details-marker (Chrome/Safari). */
+.summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--text-base);
+  color: var(--color-ink);
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary::before {
+  content: '+';
+  display: inline-block;
+  width: 1.2em;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.panel[open] .summary::before {
+  content: '\2212';
+}
+
+.content {
+  margin-top: var(--space-3);
+}
+
+.content > * + * {
+  margin-top: var(--space-3);
+}
