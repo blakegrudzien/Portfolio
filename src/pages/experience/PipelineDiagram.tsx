@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react'
+import { NodeInfoPanel } from './NodeInfoPanel'
 import styles from './PipelineDiagram.module.css'
 import { TelemetryPreview } from './TelemetryPreview'
 
@@ -25,6 +26,61 @@ const NODES: DiagramNode[] = [
   { id: 'dlq', lines: ['DLQ'], x: 920, y: 340 },
   { id: 'slack', lines: ['Slack'], x: 1060, y: 340 },
 ]
+
+// Context (always) and the real tradeoff reasoning (where one exists) per
+// node — this is where the actual engineering judgment lives, not in a
+// separate prose block disconnected from the diagram. Nodes without a
+// documented decision only get context; not every step was a deliberate
+// choice worth defending.
+const NODE_INFO: Record<string, { context: string; tradeoff?: string }> = {
+  device: {
+    context:
+      "Level Home's smart locks, doorbells, and bridges emit telemetry as they operate.",
+  },
+  condenser: {
+    context: 'Pre-processes and batches device events before they move on.',
+  },
+  kinesis: {
+    context: 'Streams the batched telemetry into the data lake.',
+  },
+  s3lake: {
+    context: 'Every raw file lands here first, before anything gets parsed.',
+  },
+  sqs: {
+    context:
+      'An event notification queues up here the moment a new file lands.',
+    tradeoff:
+      "Chosen over EventBridge — EventBridge's main advantage is fanning out to multiple destinations, which didn't matter here (there's only one pathway). SQS came with a native DLQ and simple retry mechanics out of the box, and was cheaper.",
+  },
+  lambda: {
+    context: 'Picks up the queued file and hands it to the parser.',
+    tradeoff:
+      'Both success and failure route through this same function — one central place to check either outcome, and it keeps parsing logic separate from placement logic.',
+  },
+  parser: {
+    context:
+      'Decodes the raw device bytes into a structured record. Firmware-team owned — this project treats it as a pluggable step, not something its own code needs to understand internally.',
+  },
+  output: {
+    context: 'Successfully parsed records get converted and written here.',
+    tradeoff:
+      'Uses Apache Arrow to write Parquet. Originally used DuckDB, but it required CGo=1, which meant adjusting other parts of the project to accommodate it — Arrow worked without that constraint.',
+  },
+  athena: {
+    context:
+      'Queries run directly against the Parquet files here — no separate database to keep in sync.',
+  },
+  dlq: {
+    context: 'Failed files land here instead of being deleted.',
+    tradeoff:
+      "Uses the plain SQS dead-letter queue rather than a custom one. A custom DLQ could retry only genuine AWS/connectivity errors and give up immediately on unrecoverable parsing errors — the native one can't tell the difference. Traded that precision for needing zero custom code and being able to reprocess the whole queue with one command.",
+  },
+  slack: {
+    context: 'Notifies the firmware team when a file fails.',
+    tradeoff:
+      'Started as a real-time alert bot, but the firmware team said that was more than they needed, so it became a daily digest instead. Redriving straight from Slack was considered too, then deliberately dropped once it was clear the firmware team would have AWS console access anyway.',
+  },
+}
 
 // Overlapping bounding regions grouping nodes by role, matching the shape
 // of Blake's own Excalidraw sketch. The sketch used blue/red/green; this
@@ -145,6 +201,16 @@ export function PipelineDiagram() {
   const tokenRef = useRef<SVGCircleElement>(null)
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null)
   const [showRegions, setShowRegions] = useState(false)
+  const [activeInfoId, setActiveInfoId] = useState<string | null>(null)
+
+  function nodeAccessibleLabel(node: DiagramNode): string {
+    const label = node.lines.join(' ')
+    const info = NODE_INFO[node.id]
+    if (!info) return label
+    return info.tradeoff
+      ? `${label}. ${info.context} ${info.tradeoff}`
+      : `${label}. ${info.context}`
+  }
 
   function runLeg(leg: LegKey, arrivalNodeId: string, onDone: () => void) {
     const el = tokenRef.current
@@ -210,159 +276,194 @@ export function PipelineDiagram() {
 
   const notified = phase === 'in-dlq' || phase === 'traveling-redrive'
 
-  return (
-    <div className={styles.layout}>
-      <TelemetryPreview phase={phase} />
-      <div className={styles.wrapper}>
-        <button
-          type="button"
-          className={styles.regionsToggle}
-          aria-pressed={showRegions}
-          onClick={() => setShowRegions((v) => !v)}
-        >
-          {showRegions ? 'Hide' : 'Show'} pathway groupings
-        </button>
+  const activeNode = activeInfoId
+    ? NODES.find((n) => n.id === activeInfoId)
+    : undefined
+  const activeInfo = activeNode
+    ? {
+        label: activeNode.lines.join(' '),
+        context: NODE_INFO[activeNode.id]?.context ?? '',
+        tradeoff: NODE_INFO[activeNode.id]?.tradeoff,
+      }
+    : null
 
-        {/* role="img" is deliberate: this SVG is inline and dynamically
+  return (
+    <div className={styles.container}>
+      <div className={styles.layout}>
+        <TelemetryPreview phase={phase} />
+        <div className={styles.wrapper}>
+          <button
+            type="button"
+            className={styles.regionsToggle}
+            aria-pressed={showRegions}
+            onClick={() => setShowRegions((v) => !v)}
+          >
+            {showRegions ? 'Hide' : 'Show'} pathway groupings
+          </button>
+
+          {/* role="img" is deliberate: this SVG is inline and dynamically
           rendered (nodes/token update via React state), so an actual
           <img> tag — which can only hold a static external src — isn't
           usable here. */}
-        <svg
-          className={styles.diagram}
-          viewBox="0 0 1180 440"
-          role="img"
-          aria-label="Telemetry pipeline diagram"
-        >
-          {showRegions &&
-            REGIONS.map((region) => (
-              <g key={region.id}>
-                <rect
-                  x={region.x}
-                  y={region.y}
-                  width={region.width}
-                  height={region.height}
-                  rx={16}
-                  className={styles.region}
-                  strokeDasharray={region.dash}
-                />
-                <text
-                  x={region.labelX}
-                  y={region.labelY}
-                  className={styles.regionLabel}
-                >
-                  {region.label}
+          <svg
+            className={styles.diagram}
+            viewBox="0 0 1180 440"
+            role="img"
+            aria-label="Telemetry pipeline diagram"
+          >
+            {showRegions &&
+              REGIONS.map((region) => (
+                <g key={region.id}>
+                  <rect
+                    x={region.x}
+                    y={region.y}
+                    width={region.width}
+                    height={region.height}
+                    rx={16}
+                    className={styles.region}
+                    strokeDasharray={region.dash}
+                  />
+                  <text
+                    x={region.labelX}
+                    y={region.labelY}
+                    className={styles.regionLabel}
+                  >
+                    {region.label}
+                  </text>
+                </g>
+              ))}
+
+            {STATIC_EDGES.map((edge) => (
+              <path
+                key={edge.d}
+                d={edge.d}
+                className={edge.dashed ? styles.edgeDashed : styles.edge}
+              />
+            ))}
+
+            {NODES.map((node) => (
+              <g
+                key={node.id}
+                tabIndex={0}
+                role="button"
+                aria-label={nodeAccessibleLabel(node)}
+                transform={`translate(${node.x - NODE_WIDTH / 2}, ${node.y - NODE_HEIGHT / 2})`}
+                className={[
+                  styles.node,
+                  highlightedNode === node.id ? styles.nodeActive : '',
+                  activeInfoId === node.id ? styles.nodeInfoActive : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onMouseEnter={() => setActiveInfoId(node.id)}
+                onMouseLeave={() =>
+                  setActiveInfoId((cur) => (cur === node.id ? null : cur))
+                }
+                onFocus={() => setActiveInfoId(node.id)}
+                onBlur={() =>
+                  setActiveInfoId((cur) => (cur === node.id ? null : cur))
+                }
+                onClick={() => setActiveInfoId(node.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setActiveInfoId(node.id)
+                  }
+                }}
+              >
+                <rect width={NODE_WIDTH} height={NODE_HEIGHT} rx={10} />
+                <text x={NODE_WIDTH / 2} y={NODE_HEIGHT / 2}>
+                  {node.lines.map((line, i) => (
+                    <tspan
+                      key={line}
+                      x={NODE_WIDTH / 2}
+                      dy={
+                        i === 0
+                          ? node.lines.length > 1
+                            ? '-0.3em'
+                            : '0.32em'
+                          : '1.1em'
+                      }
+                    >
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
               </g>
             ))}
 
-          {STATIC_EDGES.map((edge) => (
-            <path
-              key={edge.d}
-              d={edge.d}
-              className={edge.dashed ? styles.edgeDashed : styles.edge}
-            />
-          ))}
-
-          {NODES.map((node) => (
-            <g
-              key={node.id}
-              transform={`translate(${node.x - NODE_WIDTH / 2}, ${node.y - NODE_HEIGHT / 2})`}
-              className={
-                highlightedNode === node.id
-                  ? `${styles.node} ${styles.nodeActive}`
-                  : styles.node
-              }
-            >
-              <rect width={NODE_WIDTH} height={NODE_HEIGHT} rx={10} />
-              <text x={NODE_WIDTH / 2} y={NODE_HEIGHT / 2}>
-                {node.lines.map((line, i) => (
-                  <tspan
-                    key={line}
-                    x={NODE_WIDTH / 2}
-                    dy={
-                      i === 0
-                        ? node.lines.length > 1
-                          ? '-0.3em'
-                          : '0.32em'
-                        : '1.1em'
-                    }
-                  >
-                    {line}
-                  </tspan>
-                ))}
+            {notified && (
+              <text x={1060} y="380" className={styles.notifyLabel}>
+                notified
               </text>
-            </g>
-          ))}
+            )}
 
-          {notified && (
-            <text x={1060} y="380" className={styles.notifyLabel}>
-              notified
-            </text>
-          )}
-
-          {/* offset-path is set via a CSS custom property, not a direct
+            {/* offset-path is set via a CSS custom property, not a direct
               style.offsetPath assignment — custom properties always go
               through setProperty under the hood (there's no dot-notation
               accessor for them), which sidesteps the same silent no-op
               that direct offset-path/offset-distance assignment hit in
               runLeg above. animationDelay is a well-established property,
               so normal camelCase assignment is fine for it. */}
-          {AMBIENT_TOKENS.map((t) => (
-            <circle
-              key={t.id}
-              r={4}
-              className={styles.ambientToken}
-              style={
-                {
-                  '--ambient-path': `path('${AMBIENT_PATH}')`,
-                  animationDelay: t.delay,
-                } as CSSProperties
-              }
-            />
-          ))}
+            {AMBIENT_TOKENS.map((t) => (
+              <circle
+                key={t.id}
+                r={4}
+                className={styles.ambientToken}
+                style={
+                  {
+                    '--ambient-path': `path('${AMBIENT_PATH}')`,
+                    animationDelay: t.delay,
+                  } as CSSProperties
+                }
+              />
+            ))}
 
-          {/* Always mounted (never conditionally rendered) so tokenRef.current
+            {/* Always mounted (never conditionally rendered) so tokenRef.current
             is never null when runLeg fires — setPhase doesn't take effect
             until after the current handler returns, so a conditional
             mount driven by `phase` would still read the pre-update value
             at the moment runLeg runs. Visibility is CSS-driven instead. */}
-          <circle ref={tokenRef} className={styles.token} r={8} />
-        </svg>
+            <circle ref={tokenRef} className={styles.token} r={8} />
+          </svg>
 
-        <p className={styles.status} aria-live="polite">
-          {statusText[phase]}
-        </p>
+          <p className={styles.status} aria-live="polite">
+            {statusText[phase]}
+          </p>
 
-        <div className={styles.controls}>
-          {(phase === 'idle' || phase === 'done-success') && (
-            <>
+          <div className={styles.controls}>
+            {(phase === 'idle' || phase === 'done-success') && (
+              <>
+                <button
+                  type="button"
+                  className={styles.primaryButton}
+                  onClick={() => addTelemetry('success')}
+                >
+                  Add correct telemetry
+                </button>
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => addTelemetry('failure')}
+                >
+                  Add incorrect telemetry
+                </button>
+              </>
+            )}
+            {phase === 'in-dlq' && (
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={() => addTelemetry('success')}
+                onClick={redrive}
               >
-                Add correct telemetry
+                Redrive
               </button>
-              <button
-                type="button"
-                className={styles.secondaryButton}
-                onClick={() => addTelemetry('failure')}
-              >
-                Add incorrect telemetry
-              </button>
-            </>
-          )}
-          {phase === 'in-dlq' && (
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={redrive}
-            >
-              Redrive
-            </button>
-          )}
+            )}
+          </div>
         </div>
       </div>
+
+      <NodeInfoPanel info={activeInfo} />
     </div>
   )
 }

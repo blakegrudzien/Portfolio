@@ -1,0 +1,39 @@
+.panel {
+  min-height: 5.5rem;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
+}
+
+.context {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-ink);
+}
+
+.tradeoff {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-ink);
+}
+
+.tradeoffLabel {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}

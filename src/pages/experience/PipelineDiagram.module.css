@@ -1,3 +1,10 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
 .layout {
   display: flex;
   flex-wrap: wrap;
@@ -48,6 +55,10 @@
   stroke-dasharray: 5 5;
 }
 
+.node {
+  cursor: pointer;
+}
+
 .node rect {
   fill: var(--color-surface);
   stroke: var(--color-border);
@@ -63,6 +74,16 @@
   fill: var(--color-ink);
   text-anchor: middle;
   dominant-baseline: middle;
+}
+
+/* Hover/focus reveal — deliberately ink, not accent, so it reads as a
+   different meaning than "the token is here right now" (.nodeActive).
+   Defined before .nodeActive so if both apply at once (rare, but possible
+   if the token happens to be sitting at the node being inspected), the
+   accent state visually wins — that one carries the more essential info. */
+.nodeInfoActive rect {
+  stroke: var(--color-ink);
+  stroke-width: 2;
 }
 
 .nodeActive rect {
