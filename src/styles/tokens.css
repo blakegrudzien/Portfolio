@@ -30,8 +30,8 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   /* Type scale — roughly modular (~1.25-1.3 steps), rounded to clean rem
-     values. Proposed default; flagged for sign-off, easy to retune since
-     nothing else references raw font-size values directly. */
+     values. Nothing outside this file references raw font-size values, so
+     the whole scale can be retuned from here without touching components. */
   --text-xs: 0.75rem; /* 12px — captions, fine print */
   --text-sm: 0.875rem; /* 14px — nav labels, small UI text */
   --text-base: 1rem; /* 16px — body copy */
