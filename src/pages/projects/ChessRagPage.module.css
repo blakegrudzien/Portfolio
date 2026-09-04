@@ -1,0 +1,31 @@
+.cta {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.ctaLink {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
+}
+
+.ctaLink:hover {
+  background: var(--color-surface);
+}
+
+.ctaPrimary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.ctaPrimary:hover {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
