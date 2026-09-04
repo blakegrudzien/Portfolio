@@ -10,6 +10,8 @@
     "lint": "oxlint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:run": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -28,6 +30,7 @@
     "oxlint": "^1.79.0",
     "prettier": "^3.9.6",
     "typescript": "~6.0.2",
-    "vite": "^8.2.2"
+    "vite": "^8.2.2",
+    "vitest": "^5.0.0"
   }
 }
