@@ -77,6 +77,24 @@ export function usePipelineAnimation() {
   const runStep: StepRunner = (segment, arrival, onDone) =>
     runSegment(SEGMENTS[segment], arrival, onDone)
 
+  // The pause between segments (runFlowLegs/runSequence's `schedule`
+  // parameter) is a plain setTimeout, not a CSS transition/animation — so
+  // unlike everything else driving this diagram, it does NOT automatically
+  // collapse under prefers-reduced-motion via the global base.css override.
+  // Left alone, a reduced-motion visitor would still sit through several
+  // real seconds of pauses even though every visual transition had gone
+  // instant, which defeats the point. Checked per call rather than cached
+  // once, since matchMedia's result can change mid-session if the OS
+  // setting does. The state progression itself is unaffected — every stop
+  // is still visited and every phase still announced, just without the
+  // multi-second forced wait between them.
+  function schedule(callback: () => void, delayMs: number) {
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)',
+    ).matches
+    window.setTimeout(callback, prefersReducedMotion ? 20 : delayMs)
+  }
+
   // The outcome is chosen upfront (two buttons, not a mid-journey pause) —
   // otherwise the token would sit waiting at the parser indefinitely if the
   // visitor just never clicked anything. It still travels the common leg
@@ -88,10 +106,16 @@ export function usePipelineAnimation() {
       return
     runningRef.current = true
     setHighlightedNode('device')
-    runFlowLegs(getFlow(outcome), safeSetPhase, runStep, () => {
-      runningRef.current = false
-      safeSetPhase(getFinalPhase(outcome))
-    })
+    runFlowLegs(
+      getFlow(outcome),
+      safeSetPhase,
+      runStep,
+      () => {
+        runningRef.current = false
+        safeSetPhase(getFinalPhase(outcome))
+      },
+      schedule,
+    )
   }
 
   function redrive() {
@@ -99,10 +123,16 @@ export function usePipelineAnimation() {
     runningRef.current = true
     // The whole point of a redrive is that the parser's been fixed — it
     // always succeeds on the retry.
-    runFlowLegs(getFlow('redrive'), safeSetPhase, runStep, () => {
-      runningRef.current = false
-      safeSetPhase(getFinalPhase('redrive'))
-    })
+    runFlowLegs(
+      getFlow('redrive'),
+      safeSetPhase,
+      runStep,
+      () => {
+        runningRef.current = false
+        safeSetPhase(getFinalPhase('redrive'))
+      },
+      schedule,
+    )
   }
 
   const notified = phase === 'in-dlq' || phase === 'traveling-redrive'
