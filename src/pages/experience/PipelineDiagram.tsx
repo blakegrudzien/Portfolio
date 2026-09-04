@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import styles from './PipelineDiagram.module.css'
 import { TelemetryPreview } from './TelemetryPreview'
 
@@ -102,6 +102,20 @@ const LEG_PATHS = {
   failure: 'M 740,240 L 920,340',
   redrive: 'M 920,340 L 920,395 L 420,395 L 420,240 L 580,240 L 740,240',
 } as const
+
+// Ambient traffic: the pipeline runs continuously on its own, not just
+// when a visitor adds telemetry — a few small, muted tokens loop the full
+// success journey via a plain CSS animation (staggered with negative
+// delays so they don't move in lockstep), independent of the JS state
+// machine driving the interactive token. Always the success route; these
+// represent normal background volume, not the failure case a visitor
+// deliberately triggers.
+const AMBIENT_PATH = `${LEG_PATHS.common} ${LEG_PATHS.success.replace('M 740,240 ', '')}`
+const AMBIENT_TOKENS = [
+  { id: 'amb-1', delay: '0s' },
+  { id: 'amb-2', delay: '-2.5s' },
+  { id: 'amb-3', delay: '-5s' },
+]
 
 type LegKey = keyof typeof LEG_PATHS
 
@@ -285,6 +299,27 @@ export function PipelineDiagram() {
               notified
             </text>
           )}
+
+          {/* offset-path is set via a CSS custom property, not a direct
+              style.offsetPath assignment — custom properties always go
+              through setProperty under the hood (there's no dot-notation
+              accessor for them), which sidesteps the same silent no-op
+              that direct offset-path/offset-distance assignment hit in
+              runLeg above. animationDelay is a well-established property,
+              so normal camelCase assignment is fine for it. */}
+          {AMBIENT_TOKENS.map((t) => (
+            <circle
+              key={t.id}
+              r={4}
+              className={styles.ambientToken}
+              style={
+                {
+                  '--ambient-path': `path('${AMBIENT_PATH}')`,
+                  animationDelay: t.delay,
+                } as CSSProperties
+              }
+            />
+          ))}
 
           {/* Always mounted (never conditionally rendered) so tokenRef.current
             is never null when runLeg fires — setPhase doesn't take effect

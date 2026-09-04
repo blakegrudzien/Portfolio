@@ -76,6 +76,36 @@
   opacity: 0;
 }
 
+/* Ambient background traffic — small, muted, non-interactive tokens that
+   loop continuously to show the pipeline runs on its own, not just when a
+   visitor adds telemetry. Deliberately never accent-colored, so "the one
+   you're tracking" stays unambiguous. */
+@keyframes ambientTravel {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.ambientToken {
+  offset-path: var(--ambient-path);
+  fill: var(--color-ink-muted);
+  opacity: 0.45;
+  animation: ambientTravel 7.5s linear infinite;
+}
+
+/* Purely decorative, continuous motion — hidden outright under reduced
+   motion rather than left to freeze mid-loop or flicker at a near-zero
+   duration, since infinite + collapsed-to-near-0s would otherwise repeat
+   indefinitely rather than settle once like the interactive token does. */
+@media (prefers-reduced-motion: reduce) {
+  .ambientToken {
+    display: none;
+  }
+}
+
 .notifyLabel {
   font-family: var(--font-mono);
   font-size: 12px;
