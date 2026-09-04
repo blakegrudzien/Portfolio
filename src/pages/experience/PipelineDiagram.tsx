@@ -1,10 +1,8 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { cx } from '../../utils/cx'
 import { NodeInfoPanel } from './NodeInfoPanel'
 import styles from './PipelineDiagram.module.css'
 import {
-  AMBIENT_PATH,
-  AMBIENT_TOKENS,
   NODE_HEIGHT,
   NODE_INFO,
   NODE_WIDTH,
@@ -44,10 +42,27 @@ const lambdaNode = getNode('lambda')
 const slackNode = getNode('slack')
 
 export function PipelineDiagram() {
-  const { phase, highlightedNode, tokenRef, notified, addTelemetry, redrive } =
+  const { flows, phase, notified, registerToken, addTelemetry, redrive } =
     usePipelineAnimation()
   const [showRegions, setShowRegions] = useState(false)
   const [activeInfoId, setActiveInfoId] = useState<NodeId | null>(null)
+
+  // Which flow (if any) is sitting at each stop that has its own effect.
+  // Keyed on the occupying flow's id so the one-shot CSS animation remounts
+  // — and therefore replays — when a different token takes its place.
+  const occupantAt = (nodeId: NodeId) =>
+    flows.find((flow) => flow.arrivedAt === nodeId)?.id
+  const kinesisOccupant = occupantAt('kinesis')
+  const sqsOccupant = occupantAt('sqs')
+  const lambdaOccupant = occupantAt('lambda')
+  const athenaOccupied = flows.some((flow) => flow.arrivedAt === 'athena')
+
+  // The accent node highlight tracks the visitor's own telemetry only —
+  // background traffic constantly re-accenting nodes would both add visual
+  // noise and dilute what accent means everywhere else in the diagram.
+  const highlightedFlowNode = flows.find(
+    (flow) => flow.kind === 'highlighted',
+  )?.arrivedAt
 
   const activeNode = activeInfoId ? getNode(activeInfoId) : undefined
   const activeInfo = activeNode
@@ -122,11 +137,9 @@ export function PipelineDiagram() {
                 transform={`translate(${node.x - NODE_WIDTH / 2}, ${node.y - NODE_HEIGHT / 2})`}
                 className={cx(
                   styles.node,
-                  highlightedNode === node.id && styles.nodeActive,
+                  highlightedFlowNode === node.id && styles.nodeActive,
                   activeInfoId === node.id && styles.nodeInfoActive,
-                  node.id === 'athena' &&
-                    highlightedNode === 'athena' &&
-                    styles.queryPulse,
+                  node.id === 'athena' && athenaOccupied && styles.queryPulse,
                 )}
                 onMouseEnter={() => setActiveInfoId(node.id)}
                 onMouseLeave={() =>
@@ -171,33 +184,44 @@ export function PipelineDiagram() {
               </text>
             )}
 
-            {/* Per-stop effects — each mounts fresh whenever `highlightedNode`
-                transitions to that id, which is what makes a one-shot CSS
-                animation replay every time the token passes through again. */}
-            {highlightedNode === 'kinesis' &&
-              threeDotPositions(kinesisNode).map((pos, i) => (
-                <circle
-                  key={i}
-                  className={styles.streamDot}
-                  cx={pos.cx}
-                  cy={pos.cy}
-                  r={3}
-                />
-              ))}
+            {/* Per-stop effects — keyed on whichever flow is currently at
+                that stop, so the element remounts (and its one-shot CSS
+                animation replays) each time a different token arrives.
+                Any flow triggers these, ambient traffic included: they
+                signal "the pipeline is doing work here", not "your file is
+                here" — that distinction is what the accent highlight is
+                for. */}
+            {kinesisOccupant && (
+              <g key={kinesisOccupant}>
+                {threeDotPositions(kinesisNode).map((pos, i) => (
+                  <circle
+                    key={i}
+                    className={styles.streamDot}
+                    cx={pos.cx}
+                    cy={pos.cy}
+                    r={3}
+                  />
+                ))}
+              </g>
+            )}
 
-            {highlightedNode === 'sqs' &&
-              threeDotPositions(sqsNode).map((pos, i) => (
-                <circle
-                  key={i}
-                  className={styles.queueDot}
-                  cx={pos.cx}
-                  cy={pos.cy}
-                  r={3}
-                />
-              ))}
+            {sqsOccupant && (
+              <g key={sqsOccupant}>
+                {threeDotPositions(sqsNode).map((pos, i) => (
+                  <circle
+                    key={i}
+                    className={styles.queueDot}
+                    cx={pos.cx}
+                    cy={pos.cy}
+                    r={3}
+                  />
+                ))}
+              </g>
+            )}
 
-            {highlightedNode === 'lambda' && (
+            {lambdaOccupant && (
               <circle
+                key={lambdaOccupant}
                 className={styles.pingBurst}
                 cx={lambdaNode.x}
                 cy={lambdaNode.y}
@@ -214,41 +238,30 @@ export function PipelineDiagram() {
               />
             )}
 
-            {/* offset-path is set via a CSS custom property, not a direct
-              style.offsetPath assignment — custom properties always go
-              through setProperty under the hood (there's no dot-notation
-              accessor for them), which sidesteps the same silent no-op
-              that direct offset-path/offset-distance assignment hit in
-              usePipelineAnimation's runSegment. animationDelay is a
-              well-established property, so normal camelCase assignment is
-              fine for it. */}
-            {AMBIENT_TOKENS.map((t) => (
+            {/* Every token in flight — ambient background traffic and the
+                visitor's own telemetry alike. They differ only in size and
+                color: the mechanism moving them is identical, so effects,
+                pacing and failure handling apply to both without special
+                cases. The DLQ settle animation is highlighted-only, since
+                it animates *from* accent, a color ambient tokens never
+                have. Each token's motion is driven imperatively via its
+                registered element (see usePipelineAnimation). */}
+            {flows.map((flow) => (
               <circle
-                key={t.id}
-                r={4}
-                className={styles.ambientToken}
-                style={
-                  {
-                    '--ambient-path': `path('${AMBIENT_PATH}')`,
-                    animationDelay: t.delay,
-                  } as CSSProperties
-                }
+                key={flow.id}
+                ref={(el) => registerToken(flow.id, el)}
+                className={cx(
+                  styles.token,
+                  flow.kind === 'highlighted'
+                    ? styles.tokenHighlighted
+                    : styles.tokenAmbient,
+                  flow.kind === 'highlighted' &&
+                    flow.phase === 'in-dlq' &&
+                    styles.tokenHeld,
+                )}
+                r={flow.kind === 'highlighted' ? 8 : 4}
               />
             ))}
-
-            {/* Always mounted (never conditionally rendered) so tokenRef.current
-            is never null when runSegment fires — setPhase doesn't take effect
-            until after the current handler returns, so a conditional
-            mount driven by `phase` would still read the pre-update value
-            at the moment runSegment runs. Visibility is CSS-driven instead. */}
-            <circle
-              ref={tokenRef}
-              className={cx(
-                styles.token,
-                phase === 'in-dlq' && styles.tokenHeld,
-              )}
-              r={8}
-            />
           </svg>
 
           <p className={styles.status} aria-live="polite">

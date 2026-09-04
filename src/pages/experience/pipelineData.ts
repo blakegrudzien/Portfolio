@@ -193,34 +193,6 @@ export const SEGMENTS = {
 
 export type SegmentKey = keyof typeof SEGMENTS
 
-// Ambient traffic: the pipeline runs continuously on its own, not just
-// when a visitor adds telemetry — a few small, muted tokens loop the full
-// success journey via a plain CSS animation (staggered with negative
-// delays so they don't move in lockstep), independent of the JS state
-// machine driving the interactive token. Always the success route; these
-// represent normal background volume, not the failure case a visitor
-// deliberately triggers. Ambient tokens don't need per-segment stops —
-// it's one continuous looping path, built by concatenating every segment
-// on the success route.
-export const AMBIENT_PATH = [
-  SEGMENTS.devCond,
-  SEGMENTS.condKin,
-  SEGMENTS.kinS3,
-  SEGMENTS.s3Sqs,
-  SEGMENTS.sqsLambda,
-  SEGMENTS.lambdaParser,
-  SEGMENTS.parserOutput,
-  SEGMENTS.outputAthena,
-]
-  .map((seg, i) => (i === 0 ? seg : seg.replace(/^M [\d.]+,[\d.]+ /, '')))
-  .join(' ')
-
-export const AMBIENT_TOKENS = [
-  { id: 'amb-1', delay: '0s' },
-  { id: 'amb-2', delay: '-2.5s' },
-  { id: 'amb-3', delay: '-5s' },
-]
-
 export type Phase =
   | 'idle'
   | 'traveling-common'

@@ -37,6 +37,16 @@ export const REDRIVE_SEQUENCE: SequenceStep[] = [
 
 export type Trigger = 'success' | 'failure' | 'redrive'
 
+/** How often background traffic fails to parse. Deliberately high for a
+ * real pipeline — the point is that a visitor should see the DLQ actually
+ * accumulate during the time they spend on the page, not have to take the
+ * failure story on faith because failures are too rare to witness. */
+export const AMBIENT_FAILURE_RATE = 0.2
+
+export function pickAmbientOutcome(): 'success' | 'failure' {
+  return Math.random() < AMBIENT_FAILURE_RATE ? 'failure' : 'success'
+}
+
 /** One leg of a trigger's journey: the phase to announce while it runs,
  * and the segments that make it up. */
 export interface FlowLeg {
