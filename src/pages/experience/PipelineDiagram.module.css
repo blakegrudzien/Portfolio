@@ -1,0 +1,125 @@
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.wrapper {
+  --pipeline-leg-duration: 1200ms;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1 1 640px;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.diagram {
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+}
+
+.region {
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 1.5;
+}
+
+.regionLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  fill: var(--color-ink-muted);
+}
+
+.edge {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+}
+
+.edgeDashed {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+  stroke-dasharray: 5 5;
+}
+
+.node rect {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+  transition:
+    stroke var(--motion-duration-base) var(--motion-ease),
+    fill var(--motion-duration-base) var(--motion-ease);
+}
+
+.node text {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  fill: var(--color-ink);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.nodeActive rect {
+  stroke: var(--color-accent);
+  stroke-width: 2.5;
+  fill: var(--color-accent-surface);
+}
+
+.token {
+  fill: var(--color-accent);
+  opacity: 0;
+}
+
+.notifyLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--color-ink-muted);
+  text-anchor: middle;
+}
+
+.status {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  min-height: 1.4em;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.primaryButton,
+.secondaryButton {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+}
+
+.primaryButton {
+  border: 1px solid var(--color-accent);
+  background: var(--color-accent);
+  color: white;
+}
+
+.primaryButton:hover {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
+
+.secondaryButton {
+  border: 1px solid var(--color-ink);
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+.secondaryButton:hover {
+  background: var(--color-surface);
+}
