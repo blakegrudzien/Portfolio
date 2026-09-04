@@ -1,0 +1,57 @@
+.header {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--color-accent);
+}
+
+.links {
+  list-style: none;
+  display: flex;
+  gap: var(--space-5);
+  padding: 0;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+/* Nav items don't rely on the accent color alone to signal state — hover
+   and active both add a border, not just a color change. */
+.link {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  padding-block: var(--space-1);
+  border-bottom: 2px solid transparent;
+}
+
+.link:hover {
+  color: var(--color-ink);
+  border-bottom-color: var(--color-border);
+}
+
+.linkActive {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
