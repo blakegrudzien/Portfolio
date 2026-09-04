@@ -20,7 +20,6 @@ interface PreviewContent {
 const CONTENT: Record<Phase, PreviewContent | null> = {
   idle: null,
   'traveling-common': { label: 'Raw device bytes', lines: RAW },
-  choice: { label: 'Raw device bytes', lines: RAW },
   'traveling-failure': {
     label: 'Parse error',
     lines: ['⚠ unrecognized event type'],

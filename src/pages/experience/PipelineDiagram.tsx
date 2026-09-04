@@ -108,7 +108,6 @@ type LegKey = keyof typeof LEG_PATHS
 export type Phase =
   | 'idle'
   | 'traveling-common'
-  | 'choice'
   | 'traveling-success'
   | 'traveling-failure'
   | 'in-dlq'
@@ -118,7 +117,6 @@ export type Phase =
 const statusText: Record<Phase, string> = {
   idle: 'Add a telemetry file to watch it move through the pipeline.',
   'traveling-common': 'Telemetry is moving from the device toward the parser.',
-  choice: 'The parser is about to process the file — choose an outcome.',
   'traveling-success': 'The parsed file is being written to the output bucket.',
   'traveling-failure': 'The file failed to parse and is moving to the DLQ.',
   'in-dlq':
@@ -132,6 +130,7 @@ export function PipelineDiagram() {
   const [phase, setPhase] = useState<Phase>('idle')
   const tokenRef = useRef<SVGCircleElement>(null)
   const [highlightedNode, setHighlightedNode] = useState<string | null>(null)
+  const [showRegions, setShowRegions] = useState(false)
 
   function runLeg(leg: LegKey, arrivalNodeId: string, onDone: () => void) {
     const el = tokenRef.current
@@ -166,20 +165,24 @@ export function PipelineDiagram() {
     el.addEventListener('transitionend', handleEnd)
   }
 
-  function addTelemetry() {
+  // The outcome is chosen upfront (two buttons, not a mid-journey pause) —
+  // otherwise the token would sit waiting at the parser indefinitely if
+  // the visitor just never clicked anything. It still travels the common
+  // leg first, then chains straight into the chosen outcome leg with no
+  // pause in between, so the payload panel still visibly flips from raw
+  // bytes to decoded/error exactly when the token reaches the parser.
+  function addTelemetry(outcome: 'success' | 'failure') {
     setHighlightedNode('device')
     setPhase('traveling-common')
-    runLeg('common', 'parser', () => setPhase('choice'))
-  }
-
-  function chooseSuccess() {
-    setPhase('traveling-success')
-    runLeg('success', 'athena', () => setPhase('done-success'))
-  }
-
-  function chooseFailure() {
-    setPhase('traveling-failure')
-    runLeg('failure', 'dlq', () => setPhase('in-dlq'))
+    runLeg('common', 'parser', () => {
+      if (outcome === 'success') {
+        setPhase('traveling-success')
+        runLeg('success', 'athena', () => setPhase('done-success'))
+      } else {
+        setPhase('traveling-failure')
+        runLeg('failure', 'dlq', () => setPhase('in-dlq'))
+      }
+    })
   }
 
   function redrive() {
@@ -197,6 +200,15 @@ export function PipelineDiagram() {
     <div className={styles.layout}>
       <TelemetryPreview phase={phase} />
       <div className={styles.wrapper}>
+        <button
+          type="button"
+          className={styles.regionsToggle}
+          aria-pressed={showRegions}
+          onClick={() => setShowRegions((v) => !v)}
+        >
+          {showRegions ? 'Hide' : 'Show'} pathway groupings
+        </button>
+
         {/* role="img" is deliberate: this SVG is inline and dynamically
           rendered (nodes/token update via React state), so an actual
           <img> tag — which can only hold a static external src — isn't
@@ -207,26 +219,27 @@ export function PipelineDiagram() {
           role="img"
           aria-label="Telemetry pipeline diagram"
         >
-          {REGIONS.map((region) => (
-            <g key={region.id}>
-              <rect
-                x={region.x}
-                y={region.y}
-                width={region.width}
-                height={region.height}
-                rx={16}
-                className={styles.region}
-                strokeDasharray={region.dash}
-              />
-              <text
-                x={region.labelX}
-                y={region.labelY}
-                className={styles.regionLabel}
-              >
-                {region.label}
-              </text>
-            </g>
-          ))}
+          {showRegions &&
+            REGIONS.map((region) => (
+              <g key={region.id}>
+                <rect
+                  x={region.x}
+                  y={region.y}
+                  width={region.width}
+                  height={region.height}
+                  rx={16}
+                  className={styles.region}
+                  strokeDasharray={region.dash}
+                />
+                <text
+                  x={region.labelX}
+                  y={region.labelY}
+                  className={styles.regionLabel}
+                >
+                  {region.label}
+                </text>
+              </g>
+            ))}
 
           {STATIC_EDGES.map((edge) => (
             <path
@@ -287,29 +300,20 @@ export function PipelineDiagram() {
 
         <div className={styles.controls}>
           {(phase === 'idle' || phase === 'done-success') && (
-            <button
-              type="button"
-              className={styles.primaryButton}
-              onClick={addTelemetry}
-            >
-              Add telemetry
-            </button>
-          )}
-          {phase === 'choice' && (
             <>
               <button
                 type="button"
                 className={styles.primaryButton}
-                onClick={chooseSuccess}
+                onClick={() => addTelemetry('success')}
               >
-                Parses successfully
+                Add correct telemetry
               </button>
               <button
                 type="button"
                 className={styles.secondaryButton}
-                onClick={chooseFailure}
+                onClick={() => addTelemetry('failure')}
               >
-                Fails to parse
+                Add incorrect telemetry
               </button>
             </>
           )}

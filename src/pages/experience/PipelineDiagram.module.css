@@ -123,3 +123,19 @@
 .secondaryButton:hover {
   background: var(--color-surface);
 }
+
+.regionsToggle {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.regionsToggle:hover {
+  color: var(--color-ink);
+}
