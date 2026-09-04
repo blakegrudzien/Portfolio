@@ -72,3 +72,12 @@
 .eliminated {
   opacity: 0.35;
 }
+
+/* opacity composites the whole element, focus ring included — at 0.35 the
+   accent outline nearly disappears against the page background. Full
+   opacity while focused keeps the ring legible; the eliminated look isn't
+   needed while a screen reader or keyboard user's attention is already on
+   this exact marble via its aria-label. */
+.eliminated:focus-visible {
+  opacity: 1;
+}

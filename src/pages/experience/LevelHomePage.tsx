@@ -1,7 +1,5 @@
+import { CaseStudyShell } from '../../components/case-study/CaseStudyShell'
+
 export function LevelHomePage() {
-  return (
-    <main id="main-content">
-      <h1>Level Home</h1>
-    </main>
-  )
+  return <CaseStudyShell kind="experience" title="Level Home" />
 }
