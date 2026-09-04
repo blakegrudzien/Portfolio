@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
 import { paths } from '../../routes/paths'
+import { cx } from '../../utils/cx'
 import styles from './NavBar.module.css'
 
 const navItems: { to: string; label: string }[] = [
@@ -23,7 +24,7 @@ export function NavBar() {
               <NavLink
                 to={item.to}
                 className={({ isActive }) =>
-                  isActive ? `${styles.link} ${styles.linkActive}` : styles.link
+                  cx(styles.link, isActive && styles.linkActive)
                 }
               >
                 {item.label}

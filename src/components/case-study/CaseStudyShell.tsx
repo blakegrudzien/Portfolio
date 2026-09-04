@@ -31,7 +31,7 @@ export function CaseStudyShell({
   children,
 }: CaseStudyShellProps) {
   return (
-    <main id="main-content" className={styles.shell}>
+    <div className={styles.shell}>
       <header className={styles.header}>
         {indexLink && (
           <Link to={indexLink.href} className={styles.indexLink}>
@@ -61,6 +61,6 @@ export function CaseStudyShell({
         )}
       </header>
       <div className={styles.sections}>{children}</div>
-    </main>
+    </div>
   )
 }

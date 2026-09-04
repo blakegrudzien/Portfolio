@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Blake Grudzien's portfolio site — source at [blakegrudzien/Portfolio](https://github.com/blakegrudzien/Portfolio). A statically-built React site, not a template: each project/experience page is a case study that explains the reasoning behind what was built, not just the result.
 
-Currently, two official plugins are available:
+**Status:** in progress. The Chess RAG and Level Home case studies and the 12-marbles puzzle are built; the About page and Level Home's "my story" section are still placeholders.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React 19 + TypeScript, built with Vite, no backend — a static site.
+- React Router (library mode) for routing.
+- CSS Modules + a small set of design tokens (`src/styles/tokens.css`) for styling — no Tailwind or CSS-in-JS.
+- Self-hosted fonts via `@fontsource` (Zilla Slab, IBM Plex Sans, IBM Plex Mono), latin subset only, rather than a Google Fonts `<link>` — avoids a third-party render-blocking request.
+- oxlint for linting (with `jsx-a11y`), Prettier for formatting, Vitest + React Testing Library for tests.
+- GitHub Actions CI runs format check, lint, typecheck, tests, and build on every push/PR.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Development
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev        # start the dev server
+npm run test       # run tests in watch mode
+npm run lint        # oxlint
+npm run typecheck   # tsc -b
+npm run format       # prettier --write
+npm run build        # typecheck + production build
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## A couple of design decisions worth naming
+
+- **Direct-render-now, index-later routing.** `/projects` and `/projects/chess-rag` currently render the same page, since there's only one project; `/experience` and `/experience/level-home` likewise. Adding a second entry later is a one-line swap of the index route's element — the specific case-study routes and their URLs don't move.
+- **No data-driven "sections" abstraction for case studies.** With two case studies, a generic content schema would be premature — page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess RAG page.
+- **The Level Home pipeline diagram's animation state is split into pure data/logic and DOM-driving code** (`pipelineData.ts`, `pipelineFlow.ts`, `usePipelineAnimation.ts`) specifically so the sequencing logic — what phase follows what action — can be unit tested without a real browser animation to wait on.

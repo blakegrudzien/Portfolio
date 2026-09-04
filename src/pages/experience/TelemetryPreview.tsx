@@ -1,5 +1,6 @@
+import { cx } from '../../utils/cx'
 import styles from './TelemetryPreview.module.css'
-import type { Phase } from './PipelineDiagram'
+import type { Phase } from './pipelineData'
 
 const RAW = ['4F 2A 9C 01 3E 88 D2 00', '71 4B FF 02 1A 90 C3 5D']
 
@@ -52,9 +53,11 @@ export function TelemetryPreview({ phase }: { phase: Phase }) {
         <>
           <p className={styles.stateLabel}>{content.label}</p>
           <pre
-            className={`${styles.body} ${content.tone === 'error' ? styles.bodyError : ''} ${
-              content.tone === 'success' ? styles.bodySuccess : ''
-            }`}
+            className={cx(
+              styles.body,
+              content.tone === 'error' && styles.bodyError,
+              content.tone === 'success' && styles.bodySuccess,
+            )}
           >
             {content.lines.join('\n')}
           </pre>

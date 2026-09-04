@@ -4,7 +4,7 @@ import styles from './HomePage.module.css'
 
 export function HomePage() {
   return (
-    <main id="main-content" className={styles.page}>
+    <div className={styles.page}>
       <p className={styles.eyebrow}>
         Solutions Engineer · Backend · Data Engineer · FDE
       </p>
@@ -17,6 +17,6 @@ export function HomePage() {
       <Link to={paths.projectChessRag} className={styles.cta}>
         Read the Chess RAG case study →
       </Link>
-    </main>
+    </div>
   )
 }

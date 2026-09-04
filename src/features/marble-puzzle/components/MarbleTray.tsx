@@ -1,5 +1,6 @@
 import { MARBLE_COUNT } from '../logic/types'
 import type { MarbleId, PanAssignment, PossibilitySpace } from '../logic/types'
+import { cx } from '../../../utils/cx'
 import styles from './MarbleTray.module.css'
 
 interface MarbleTrayProps {
@@ -43,14 +44,12 @@ export function MarbleTray({
             type="button"
             disabled={disabled}
             onClick={() => onToggle(marbleId)}
-            className={[
+            className={cx(
               styles.marble,
-              onLeft ? styles.onLeft : '',
-              onRight ? styles.onRight : '',
-              isEliminated ? styles.eliminated : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
+              onLeft && styles.onLeft,
+              onRight && styles.onRight,
+              isEliminated && styles.eliminated,
+            )}
             aria-label={`Marble ${marbleId + 1}, ${describeAssignment(assignment, marbleId)}`}
           >
             {marbleId + 1}

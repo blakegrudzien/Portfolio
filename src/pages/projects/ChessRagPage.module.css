@@ -23,9 +23,9 @@
 .ctaPrimary {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: white;
+  color: var(--color-on-accent);
 }
 
 .ctaPrimary:hover {
-  background: color-mix(in srgb, var(--color-accent) 85%, black);
+  background: var(--color-accent-hover);
 }

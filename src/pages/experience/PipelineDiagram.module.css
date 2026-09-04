@@ -14,7 +14,7 @@
 }
 
 .wrapper {
-  --pipeline-leg-duration: 1200ms;
+  --pipeline-segment-duration: 450ms;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -37,7 +37,7 @@
 
 .regionLabel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   letter-spacing: 0.03em;
   fill: var(--color-ink-muted);
 }
@@ -127,9 +127,136 @@
   }
 }
 
+/* Per-stop effects, each a one-shot CSS animation (not infinite) so it
+   plays once on arrival and settles at its end state — automatically
+   collapses to near-instant under prefers-reduced-motion via the global
+   base.css override, no per-effect reduced-motion handling needed. Each
+   is mounted/unmounted by React as `highlightedNode` changes, which is
+   what makes it replay every time that stop is reached again. */
+
+/* Kinesis Firehose: a few particles stream past, in and out, suggesting
+   many events being batched through rather than a single file. */
+@keyframes streamDot {
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  35% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+.streamDot {
+  fill: var(--color-ink-muted);
+}
+
+.streamDot:nth-child(1) {
+  animation: streamDot 0.9s ease-in-out;
+}
+
+.streamDot:nth-child(2) {
+  animation: streamDot 0.9s ease-in-out 0.12s;
+}
+
+.streamDot:nth-child(3) {
+  animation: streamDot 0.9s ease-in-out 0.24s;
+}
+
+/* SQS: small dots queue up (grow in, hold, shrink away) rather than
+   stream through — a queue holds things, it doesn't just pass them on. */
+@keyframes queueDot {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(5px) scale(0.5);
+  }
+  25%,
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.queueDot {
+  fill: var(--color-ink-muted);
+}
+
+.queueDot:nth-child(1) {
+  animation: queueDot 1.1s ease-in-out;
+}
+
+.queueDot:nth-child(2) {
+  animation: queueDot 1.1s ease-in-out 0.15s;
+}
+
+.queueDot:nth-child(3) {
+  animation: queueDot 1.1s ease-in-out 0.3s;
+}
+
+/* Lambda and Slack share this ping — an invocation firing and a
+   notification landing are both "something triggered here" moments. */
+@keyframes pingBurst {
+  0% {
+    r: 4;
+    opacity: 0.8;
+  }
+  100% {
+    r: 30;
+    opacity: 0;
+  }
+}
+
+.pingBurst {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  animation: pingBurst 0.6s ease-out;
+}
+
+/* Athena: the destination node briefly grows, suggesting a query landing
+   and resolving. transform-box/origin keep the scale centered on the
+   node itself rather than the SVG's own (0,0) corner. */
+@keyframes queryPulse {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.queryPulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: queryPulse 0.5s ease-out;
+}
+
+/* DLQ: the token itself settles into a muted, held color rather than
+   staying accent-bright — it's not "in transit" anymore, it's waiting. */
+@keyframes settleIntoHold {
+  from {
+    fill: var(--color-accent);
+  }
+  to {
+    fill: var(--color-ink-muted);
+  }
+}
+
+.tokenHeld {
+  animation: settleIntoHold 0.5s ease-out forwards;
+}
+
 .notifyLabel {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   fill: var(--color-ink-muted);
   text-anchor: middle;
 }
@@ -158,11 +285,11 @@
 .primaryButton {
   border: 1px solid var(--color-accent);
   background: var(--color-accent);
-  color: white;
+  color: var(--color-on-accent);
 }
 
 .primaryButton:hover {
-  background: color-mix(in srgb, var(--color-accent) 85%, black);
+  background: var(--color-accent-hover);
 }
 
 .secondaryButton {

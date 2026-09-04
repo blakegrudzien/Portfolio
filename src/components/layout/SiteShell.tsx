@@ -13,9 +13,9 @@ export function SiteShell() {
         Skip to main content
       </a>
       <NavBar />
-      <div className={styles.content}>
+      <main id="main-content" className={styles.content}>
         <Outlet />
-      </div>
+      </main>
       <Footer />
     </div>
   )

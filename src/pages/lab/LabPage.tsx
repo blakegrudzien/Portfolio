@@ -3,7 +3,7 @@ import styles from './LabPage.module.css'
 
 export function LabPage() {
   return (
-    <main id="main-content" className={styles.page}>
+    <div className={styles.page}>
       <h1>The 12 marbles puzzle</h1>
       <p className={`prose ${styles.intro}`}>
         One of these 12 marbles is a different weight than the rest — you don't
@@ -13,6 +13,6 @@ export function LabPage() {
         again to take it off.
       </p>
       <MarblePuzzle />
-    </main>
+    </div>
   )
 }

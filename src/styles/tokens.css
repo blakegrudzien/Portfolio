@@ -21,7 +21,13 @@
      ink on bg          16.77:1  (AAA)
      accent on bg         5.60:1  (AA normal text)
      white on accent       5.84:1  (AA normal text — for filled accent buttons)
-     accent on ink         2.99:1  (FAILS AA — never put accent text on ink) */
+     accent on ink         2.99:1  (FAILS AA — never put accent text on ink)
+
+     --color-on-accent codifies the "white on accent" row above so every
+     filled-accent surface (buttons, CTAs) reads it from one place instead
+     of each component hand-picking the literal keyword. */
+  --color-on-accent: #fff;
+  --color-accent-hover: color-mix(in srgb, var(--color-accent) 85%, black);
 
   /* Type — Zilla Slab for headings, IBM Plex Sans for body/UI,
      IBM Plex Mono for nav/tags/technical-register accents. */

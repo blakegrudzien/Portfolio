@@ -3,11 +3,11 @@ import { paths } from '../../routes/paths'
 
 export function NotFoundPage() {
   return (
-    <main id="main-content">
+    <div>
       <h1>Page not found</h1>
       <p>
         <Link to={paths.home}>Back home</Link>
       </p>
-    </main>
+    </div>
   )
 }
