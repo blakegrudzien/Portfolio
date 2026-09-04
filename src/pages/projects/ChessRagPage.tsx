@@ -1,7 +1,5 @@
+import { CaseStudyShell } from '../../components/case-study/CaseStudyShell'
+
 export function ChessRagPage() {
-  return (
-    <main id="main-content">
-      <h1>Chess RAG</h1>
-    </main>
-  )
+  return <CaseStudyShell kind="project" title="Chess RAG" />
 }
