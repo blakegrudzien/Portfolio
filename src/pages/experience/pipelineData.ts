@@ -19,23 +19,65 @@ export interface DiagramNode {
   lines: string[]
   x: number
   y: number
+  /** The node's hit target and label anchor, centered on (x, y). Nodes are
+   * no longer uniform boxes — each one is a bespoke illustration (see
+   * pipelineGlyphs) — so size is per node rather than two shared
+   * constants. Edge trimming below derives from this too, which is what
+   * keeps the line art from running underneath the artwork. */
+  width: number
+  height: number
 }
 
-export const NODE_WIDTH = 140
-export const NODE_HEIGHT = 56
-
+// Positions are hand-placed, but only here: every edge path, every token
+// path and every hit target is derived from them further down. Moving a
+// node is a one-line change.
 export const NODES: DiagramNode[] = [
-  { id: 'device', lines: ['Device'], x: 60, y: 40 },
-  { id: 'condenser', lines: ['Telemetry', 'condenser'], x: 60, y: 140 },
-  { id: 'kinesis', lines: ['Kinesis', 'Firehose'], x: 60, y: 240 },
-  { id: 's3lake', lines: ['S3 data', 'lake'], x: 240, y: 240 },
-  { id: 'sqs', lines: ['SQS'], x: 420, y: 240 },
-  { id: 'lambda', lines: ['Lambda'], x: 580, y: 240 },
-  { id: 'parser', lines: ['The parser'], x: 740, y: 240 },
-  { id: 'output', lines: ['Parquet', 'output'], x: 920, y: 130 },
-  { id: 'athena', lines: ['Athena'], x: 1060, y: 130 },
-  { id: 'dlq', lines: ['DLQ'], x: 920, y: 340 },
-  { id: 'slack', lines: ['Slack'], x: 1060, y: 340 },
+  { id: 'device', lines: ['Devices'], x: 108, y: 56, width: 132, height: 60 },
+  {
+    id: 'condenser',
+    lines: ['Telemetry', 'condenser'],
+    x: 108,
+    y: 176,
+    width: 116,
+    height: 52,
+  },
+  {
+    id: 'kinesis',
+    lines: ['Kinesis', 'Firehose'],
+    x: 108,
+    y: 310,
+    width: 108,
+    height: 60,
+  },
+  {
+    id: 's3lake',
+    lines: ['S3 data lake'],
+    x: 296,
+    y: 310,
+    width: 128,
+    height: 76,
+  },
+  { id: 'sqs', lines: ['SQS'], x: 468, y: 310, width: 112, height: 60 },
+  { id: 'lambda', lines: ['Lambda'], x: 616, y: 310, width: 108, height: 60 },
+  {
+    id: 'parser',
+    lines: ['The parser'],
+    x: 764,
+    y: 310,
+    width: 112,
+    height: 60,
+  },
+  {
+    id: 'output',
+    lines: ['Parquet output'],
+    x: 936,
+    y: 160,
+    width: 108,
+    height: 64,
+  },
+  { id: 'athena', lines: ['Athena'], x: 1084, y: 160, width: 112, height: 72 },
+  { id: 'dlq', lines: ['DLQ'], x: 936, y: 414, width: 100, height: 68 },
+  { id: 'slack', lines: ['Slack'], x: 1084, y: 414, width: 92, height: 56 },
 ]
 
 export function getNode(id: NodeId): DiagramNode {
@@ -107,9 +149,9 @@ export const NODE_INFO: Record<NodeId, { context: string; tradeoff?: string }> =
 // stays inside the site's locked bg/ink/accent palette instead, so the
 // three are told apart by border style (solid/dashed/dotted) and label
 // text rather than by introducing new hues. Hand-fit bounding boxes, not
-// derived from NODES — unlike the point-effects below, a region has to
-// wrap several nodes plus padding, which isn't a clean offset from a
-// single node's coordinates.
+// derived from NODES — unlike the edges below, a region has to wrap
+// several nodes plus their labels plus padding, which isn't a clean
+// offset from any single node's coordinates.
 export const REGIONS: {
   id: string
   label: string
@@ -124,74 +166,239 @@ export const REGIONS: {
   {
     id: 'data-prep',
     label: 'Data preparation',
-    x: 150,
-    y: 192,
-    width: 680,
-    height: 96,
-    labelX: 166,
-    labelY: 212,
+    x: 214,
+    y: 258,
+    width: 622,
+    height: 126,
+    labelX: 230,
+    labelY: 278,
   },
   {
     id: 'failure',
     label: 'Failure pathway',
-    x: 330,
-    y: 192,
-    width: 680,
-    height: 196,
+    x: 396,
+    y: 258,
+    width: 750,
+    height: 258,
     dash: '10 6',
-    labelX: 346,
-    labelY: 372,
+    labelX: 412,
+    labelY: 278,
   },
   {
     id: 'success',
     label: 'Success pathway',
-    x: 650,
-    y: 82,
-    width: 500,
-    height: 206,
+    x: 694,
+    y: 110,
+    width: 460,
+    height: 274,
     dash: '2 4',
-    labelX: 850,
-    labelY: 102,
+    labelX: 876,
+    labelY: 130,
   },
 ]
 
-// Background line art — every edge in the diagram, drawn once and never
-// animated. The redrive return line detours below the main row so it
-// doesn't cut across the SQS/Lambda/parser boxes.
-export const STATIC_EDGES: { d: string; dashed?: boolean }[] = [
-  { d: 'M 60,40 L 60,140' },
-  { d: 'M 60,140 L 60,240' },
-  { d: 'M 60,240 L 240,240' },
-  { d: 'M 240,240 L 420,240' },
-  { d: 'M 420,240 L 580,240' },
-  { d: 'M 580,240 L 740,240' },
-  { d: 'M 740,240 L 920,130' },
-  { d: 'M 920,130 L 1060,130' },
-  { d: 'M 740,240 L 920,340' },
-  { d: 'M 920,340 L 1060,340' },
-  { d: 'M 920,340 L 920,395 L 420,395 L 420,240', dashed: true },
+// --- geometry ------------------------------------------------------------
+
+interface Point {
+  x: number
+  y: number
+}
+
+/** Gap left between a node's box and the line art that meets it, so edges
+ * stop just short of the artwork instead of touching or tucking under it. */
+const EDGE_GAP = 10
+
+/** A node's label sits below its artwork, so its ink reaches further down
+ * than its box does. Edges have to clear the label too — otherwise a
+ * vertical edge draws straight through the text, which is exactly what
+ * the first pass of this layout did. */
+const LABEL_BASELINE_OFFSET = 15
+const LABEL_LINE_HEIGHT = 15
+const LABEL_DESCENT = 5
+
+function bottomExtent(node: DiagramNode): number {
+  return (
+    node.height / 2 +
+    LABEL_BASELINE_OFFSET +
+    (node.lines.length - 1) * LABEL_LINE_HEIGHT +
+    LABEL_DESCENT
+  )
+}
+
+/** Where a ray from a node's center toward `toward` crosses that node's
+ * bounds. Used to trim edges back to the node boundary — the diagonal
+ * parser → output / parser → DLQ edges are why this solves for the box
+ * rather than just subtracting half a width. */
+function boxExit(node: DiagramNode, toward: Point): Point {
+  const dx = toward.x - node.x
+  const dy = toward.y - node.y
+  const halfW = node.width / 2 + EDGE_GAP
+  // Asymmetric on purpose: only the downward direction has a label in it.
+  const extentY = (dy > 0 ? bottomExtent(node) : node.height / 2) + EDGE_GAP
+  const scaleX = dx === 0 ? Infinity : halfW / Math.abs(dx)
+  const scaleY = dy === 0 ? Infinity : extentY / Math.abs(dy)
+  const scale = Math.min(scaleX, scaleY)
+  return { x: node.x + dx * scale, y: node.y + dy * scale }
+}
+
+function polyline(points: Point[]): string {
+  return points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ')
+}
+
+/** Where a token comes to rest inside a node's artwork, as an offset from
+ * that node's center. Arriving somewhere should mean landing *in* the
+ * thing — on the floor of the lake, in a slot of the queue, in a cell of
+ * Athena's grid — rather than stopping on top of a picture of it. That's
+ * the whole reason the nodes stopped being rectangles, and it's what the
+ * per-stop particle effects used to gesture at from the outside.
+ *
+ * Several seats per node so two tokens at the same stop don't stack. The
+ * DLQ is deliberately absent: its pile has to keep growing across
+ * arrivals instead of cycling, so usePipelineAnimation owns that one.
+ */
+const NODE_SEATS: Partial<Record<NodeId, Point[]>> = {
+  condenser: [{ x: 0, y: 0 }],
+  kinesis: [{ x: 6, y: 0 }],
+  s3lake: [
+    { x: -30, y: 22 },
+    { x: 0, y: 22 },
+    { x: 30, y: 22 },
+  ],
+  sqs: [
+    { x: -33, y: 0 },
+    { x: -11, y: 0 },
+    { x: 11, y: 0 },
+    { x: 33, y: 0 },
+  ],
+  lambda: [{ x: 0, y: 0 }],
+  parser: [{ x: 0, y: 0 }],
+  output: [
+    { x: -20, y: 16 },
+    { x: 0, y: 16 },
+    { x: 20, y: 16 },
+  ],
+  // The grid cells themselves, filling bottom row first so the working set
+  // reads as stacking up rather than scattering.
+  athena: [18, 0, -18].flatMap((y) =>
+    [-36, -12, 12, 36].map((x) => ({ x, y })),
+  ),
+}
+
+export function nodeSeat(id: NodeId, slot: number): Point | null {
+  const seats = NODE_SEATS[id]
+  if (!seats) return null
+  return seats[slot % seats.length] ?? null
+}
+
+export type SegmentKey =
+  | 'devCond'
+  | 'condKin'
+  | 'kinS3'
+  | 's3Sqs'
+  | 'sqsLambda'
+  | 'lambdaParser'
+  | 'parserOutput'
+  | 'outputAthena'
+  | 'parserDlq'
+  | 'dlqReturn'
+
+interface Connection {
+  from: NodeId
+  to: NodeId
+  /** Omitted for edges no token ever travels: DLQ → Slack is a
+   * notification about a file, not the file moving anywhere. */
+  segment?: SegmentKey
+  /** Interior corners, for edges that don't run straight between two
+   * nodes. Only the redrive return needs them — it detours below the
+   * whole diagram rather than cutting back across the main row. */
+  waypoints?: Point[]
+  dashed?: boolean
+}
+
+// The single source of truth for how the diagram is wired. Edge line art
+// and token travel paths used to be two hand-written lists of coordinate
+// strings that had to be kept identical by hand; they're now both derived
+// from this, so they cannot drift apart. They differ in exactly one way,
+// and it's computed: an edge stops at the node's boundary, a token
+// travels all the way to its center.
+const CONNECTIONS: Connection[] = [
+  { from: 'device', to: 'condenser', segment: 'devCond' },
+  { from: 'condenser', to: 'kinesis', segment: 'condKin' },
+  { from: 'kinesis', to: 's3lake', segment: 'kinS3' },
+  { from: 's3lake', to: 'sqs', segment: 's3Sqs' },
+  { from: 'sqs', to: 'lambda', segment: 'sqsLambda' },
+  { from: 'lambda', to: 'parser', segment: 'lambdaParser' },
+  { from: 'parser', to: 'output', segment: 'parserOutput' },
+  { from: 'output', to: 'athena', segment: 'outputAthena' },
+  { from: 'parser', to: 'dlq', segment: 'parserDlq' },
+  { from: 'dlq', to: 'slack' },
+  {
+    from: 'dlq',
+    to: 'sqs',
+    segment: 'dlqReturn',
+    waypoints: [
+      { x: 936, y: 496 },
+      { x: 468, y: 496 },
+    ],
+    dashed: true,
+  },
 ]
 
-// One path per node-to-node hop — deliberately finer-grained than the
-// diagram's visual "legs", because highlightedNode (and every per-stop
-// effect keyed off it) only updates at a segment's end. A single
-// Device-to-parser transition would never pass through an intermediate
-// "arrived at Kinesis" state to hang an effect on. Segment paths mirror
-// the static edges above so the token tracks the visible line art exactly.
-export const SEGMENTS = {
-  devCond: 'M 60,40 L 60,140',
-  condKin: 'M 60,140 L 60,240',
-  kinS3: 'M 60,240 L 240,240',
-  s3Sqs: 'M 240,240 L 420,240',
-  sqsLambda: 'M 420,240 L 580,240',
-  lambdaParser: 'M 580,240 L 740,240',
-  parserOutput: 'M 740,240 L 920,130',
-  outputAthena: 'M 920,130 L 1060,130',
-  parserDlq: 'M 740,240 L 920,340',
-  dlqReturn: 'M 920,340 L 920,395 L 420,395 L 420,240',
-} as const
+function connectionPoints(connection: Connection) {
+  const from = getNode(connection.from)
+  const to = getNode(connection.to)
+  const waypoints = connection.waypoints ?? []
+  const firstAfterStart = waypoints[0] ?? to
+  const lastBeforeEnd = waypoints[waypoints.length - 1] ?? from
+  return {
+    /** Center to center — where a token actually travels, since arriving
+     * "at" a node means arriving at its middle. */
+    full: [from, ...waypoints, to],
+    /** Trimmed to the node boundaries — what gets drawn. */
+    trimmed: [
+      boxExit(from, firstAfterStart),
+      ...waypoints,
+      boxExit(to, lastBeforeEnd),
+    ],
+  }
+}
 
-export type SegmentKey = keyof typeof SEGMENTS
+// Background line art — every edge in the diagram, drawn once and never
+// animated.
+export const STATIC_EDGES: { d: string; dashed?: boolean }[] = CONNECTIONS.map(
+  (connection) => ({
+    d: polyline(connectionPoints(connection).trimmed),
+    dashed: connection.dashed,
+  }),
+)
+
+// One path per node-to-node hop — deliberately finer-grained than the
+// diagram's visual "legs", because a flow's arrivedAt (and every per-stop
+// effect keyed off it) only updates at a segment's end. A single
+// device-to-parser transition would never pass through an intermediate
+// "arrived at Kinesis" state to hang an effect on.
+function segmentPath(key: SegmentKey): string {
+  const connection = CONNECTIONS.find((c) => c.segment === key)
+  if (!connection) throw new Error(`No connection defines segment: ${key}`)
+  return polyline(connectionPoints(connection).full)
+}
+
+// Spelled out key by key rather than reduced from CONNECTIONS, so the
+// compiler checks that every SegmentKey actually has a path — a filtered
+// reduce would need a cast, and a missing segment would then surface as a
+// token that silently never moves.
+export const SEGMENTS: Record<SegmentKey, string> = {
+  devCond: segmentPath('devCond'),
+  condKin: segmentPath('condKin'),
+  kinS3: segmentPath('kinS3'),
+  s3Sqs: segmentPath('s3Sqs'),
+  sqsLambda: segmentPath('sqsLambda'),
+  lambdaParser: segmentPath('lambdaParser'),
+  parserOutput: segmentPath('parserOutput'),
+  outputAthena: segmentPath('outputAthena'),
+  parserDlq: segmentPath('parserDlq'),
+  dlqReturn: segmentPath('dlqReturn'),
+}
 
 export type Phase =
   | 'idle'

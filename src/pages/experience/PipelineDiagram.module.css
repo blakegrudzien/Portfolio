@@ -59,21 +59,71 @@
   cursor: pointer;
 }
 
-.node rect {
-  fill: var(--color-surface);
-  stroke: var(--color-border);
-  stroke-width: 1.5;
-  transition:
-    stroke var(--motion-duration-base) var(--motion-ease),
-    fill var(--motion-duration-base) var(--motion-ease);
+/* Invisible but generous: this is the whole click/hover target now that
+   the visible rectangle is gone, and it stays a plain box regardless of
+   how sparse the artwork inside it is. Hairline strokes are a miserable
+   thing to have to hit with a pointer. */
+.hitArea {
+  fill: transparent;
 }
 
-.node text {
+/* The replacement affordance. Transparent until hovered or focused, so
+   the diagram at rest is artwork and lines only. */
+.nodeOutline {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 1.5;
+  transition: stroke var(--motion-duration-base) var(--motion-ease);
+}
+
+/* One weight and one color for every node's artwork — eleven hand-drawn
+   shapes only read as a set if they're drawn with the same pen. Set on
+   the wrapping <g> rather than per path so a state change below can
+   restyle an entire node with a single selector. */
+.glyph {
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke var(--motion-duration-base) var(--motion-ease);
+}
+
+/* Logos are reproduced at their own weight rather than redrawn at the
+   diagram's — a mark everyone recognizes looks broken, not stylish, when
+   it's traced in the house hairline. */
+.glyphLogo {
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 6;
+  stroke-linecap: butt;
+  transition: stroke var(--motion-duration-base) var(--motion-ease);
+}
+
+.nodeActive .glyphLogo {
+  stroke: var(--color-accent);
+}
+
+/* The parser's black box and the Slack mark — the only filled shapes in
+   the diagram. Both are explained where they're drawn. */
+.glyphSolid {
+  fill: var(--color-ink);
+  stroke: none;
+}
+
+.glyphMark {
+  fill: var(--color-ink-muted);
+  stroke: none;
+}
+
+/* Labels sit under the artwork rather than inside it — there's no box to
+   put them in anymore, and an illustration is easier to read without
+   type laid over it. */
+.nodeLabel {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 13px;
   fill: var(--color-ink);
   text-anchor: middle;
-  dominant-baseline: middle;
 }
 
 /* Hover/focus reveal — deliberately ink, not accent, so it reads as a
@@ -81,15 +131,30 @@
    Defined before .nodeActive so if both apply at once (rare, but possible
    if the token happens to be sitting at the node being inspected), the
    accent state visually wins — that one carries the more essential info. */
-.nodeInfoActive rect {
+.nodeInfoActive .nodeOutline {
   stroke: var(--color-ink);
+}
+
+.nodeActive .nodeOutline {
+  stroke: var(--color-accent);
   stroke-width: 2;
 }
 
-.nodeActive rect {
+/* Accent on the artwork itself, not just its outline: with no fill left to
+   tint, the stroke is the only thing that can carry the state. Accent on
+   the page background is 5.60:1, so this stays legible. */
+.nodeActive .glyph {
   stroke: var(--color-accent);
-  stroke-width: 2.5;
-  fill: var(--color-accent-surface);
+}
+
+.nodeActive .glyphSolid {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.nodeActive .glyphMark {
+  fill: var(--color-accent);
+  stroke: none;
 }
 
 /* Element opacity is driven imperatively as a token starts moving, so the
@@ -110,96 +175,11 @@
   fill-opacity: 0.5;
 }
 
-/* Per-stop effects, each a one-shot CSS animation (not infinite) so it
-   plays once on arrival and settles at its end state — automatically
-   collapses to near-instant under prefers-reduced-motion via the global
-   base.css override, no per-effect reduced-motion handling needed. Each
-   is mounted/unmounted by React as `highlightedNode` changes, which is
-   what makes it replay every time that stop is reached again. */
-
-/* Kinesis Firehose: a few particles stream past, in and out, suggesting
-   many events being batched through rather than a single file. */
-@keyframes streamDot {
-  0% {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  35% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateX(10px);
-  }
-}
-
-.streamDot {
-  fill: var(--color-ink-muted);
-}
-
-.streamDot:nth-child(1) {
-  animation: streamDot 0.9s ease-in-out;
-}
-
-.streamDot:nth-child(2) {
-  animation: streamDot 0.9s ease-in-out 0.12s;
-}
-
-.streamDot:nth-child(3) {
-  animation: streamDot 0.9s ease-in-out 0.24s;
-}
-
-/* SQS: small dots queue up (grow in, hold, shrink away) rather than
-   stream through — a queue holds things, it doesn't just pass them on. */
-@keyframes queueDot {
-  0%,
-  100% {
-    opacity: 0;
-    transform: translateY(5px) scale(0.5);
-  }
-  25%,
-  70% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.queueDot {
-  fill: var(--color-ink-muted);
-}
-
-.queueDot:nth-child(1) {
-  animation: queueDot 1.1s ease-in-out;
-}
-
-.queueDot:nth-child(2) {
-  animation: queueDot 1.1s ease-in-out 0.15s;
-}
-
-.queueDot:nth-child(3) {
-  animation: queueDot 1.1s ease-in-out 0.3s;
-}
-
-/* Lambda and Slack share this ping — an invocation firing and a
-   notification landing are both "something triggered here" moments. */
-@keyframes pingBurst {
-  0% {
-    r: 4;
-    opacity: 0.8;
-  }
-  100% {
-    r: 30;
-    opacity: 0;
-  }
-}
-
-.pingBurst {
-  fill: none;
-  stroke: var(--color-accent);
-  stroke-width: 2;
-  animation: pingBurst 0.6s ease-out;
-}
+/* The remaining per-stop effect. The particle bursts that used to sit
+   above Kinesis, SQS and Lambda are gone: they animated *next to* a node
+   to suggest what it was doing, which is exactly the job the node's own
+   silhouette now does, and the token seating itself into that silhouette
+   says it better than dots orbiting outside it did. */
 
 /* Athena: the destination node briefly grows, suggesting a query landing
    and resolving. transform-box/origin keep the scale centered on the
@@ -220,6 +200,15 @@
   transform-box: fill-box;
   transform-origin: center;
   animation: queryPulse 0.5s ease-out;
+}
+
+/* Inside the parser, the token inverts to the page background: on that
+   solid ink fill its normal color is invisible. Set after the kind
+   classes so it wins over both, and as a plain fill so the imperatively
+   driven opacity is untouched. */
+.tokenInParser {
+  fill: var(--color-bg);
+  fill-opacity: 1;
 }
 
 /* DLQ: the token itself settles into a muted, held color rather than

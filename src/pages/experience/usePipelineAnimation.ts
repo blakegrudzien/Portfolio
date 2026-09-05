@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { SEGMENTS, type NodeId, type Phase } from './pipelineData'
+import { SEGMENTS, nodeSeat, type NodeId, type Phase } from './pipelineData'
 import {
   getFinalPhase,
   getFlow,
@@ -26,12 +26,31 @@ export interface FlowInstance {
 }
 
 // Jittered rather than fixed, so traffic reads as a real system under
-// variable load instead of a metronome. The cap applies to flows actively
-// traveling — DLQ-parked ones are deliberately uncapped, since watching the
-// backlog grow is the point.
-const MIN_SPAWN_DELAY_MS = 1500
-const MAX_SPAWN_DELAY_MS = 4000
-const MAX_TRAVELING_AMBIENT = 4
+// variable load instead of a metronome. Slower than it was: every arrival
+// now costs more of a viewer's attention than it did when a node was a
+// rectangle, and the property that actually matters here is that a backlog
+// visibly accumulates over the time someone spends on the page — which it
+// still does at this rate and a 20% failure rate.
+//
+// The cap applies to flows actively traveling; DLQ-parked ones are
+// deliberately uncapped, since watching the backlog grow is the point.
+const MIN_SPAWN_DELAY_MS = 3000
+const MAX_SPAWN_DELAY_MS = 6000
+const MAX_TRAVELING_AMBIENT = 7
+
+/** How much longer background traffic dwells at each stop than the
+ * visitor's own file does.
+ *
+ * Filling the pipeline to its cap is a matter of arrival rate times time
+ * in the system, and only one of those is safe to turn up. Spawning often
+ * enough to hold seven in flight would fire the device every second or so,
+ * which is the noisiest corner of the diagram. Holding each file longer
+ * costs nothing visually — a token sitting in a queue slot *is* the
+ * picture — and it's the truthful half anyway: files really do wait in
+ * buckets and queues for far longer than they spend in transit. The
+ * visitor's own file stays at 1x, because they're watching that one and
+ * shouldn't have to wait out a realistic queue to see it land. */
+const AMBIENT_DWELL_SCALE = 7
 
 function randomSpawnDelay() {
   return (
@@ -40,13 +59,18 @@ function randomSpawnDelay() {
   )
 }
 
-/** Fans parked failures out into a small grid just below the DLQ node, so a
- * backlog reads as a growing pile rather than one token sitting on top of
- * another — and stays clear of the node's own label. */
+/** Fans parked failures out into a small grid so a backlog reads as a
+ * growing pile rather than one token sitting on top of another. Now that
+ * the DLQ is drawn as a bin with a floor, the pile belongs inside it
+ * rather than in the empty space underneath, where the node's label now
+ * lives. */
 function dlqClusterOffset(slot: number) {
   const col = slot % 4
-  const row = Math.floor(slot / 4) % 2
-  return { dx: (col - 1.5) * 12, dy: 36 + row * 11 }
+  const row = Math.floor(slot / 4) % 3
+  // Rows land on the centers of the bin's three compartments rather than
+  // on the lines dividing them, and fill from the bottom up — a backlog
+  // piles up, it doesn't hang from the ceiling.
+  return { dx: (col - 1.5) * 13, dy: 16 - row * 16 }
 }
 
 export function usePipelineAnimation() {
@@ -58,6 +82,7 @@ export function usePipelineAnimation() {
   const mountedRef = useRef(true)
   const idCounterRef = useRef(0)
   const dlqSlotCounterRef = useRef(0)
+  const seatCountersRef = useRef(new Map<NodeId, number>())
   // Mirrors "how many ambient flows are mid-journey" without reading state,
   // so the spawn loop below can stay one long-lived effect instead of being
   // torn down and rebuilt every time any flow changes.
@@ -91,6 +116,16 @@ export function usePipelineAnimation() {
     tokenElsRef.current.delete(id)
     if (!mountedRef.current) return
     setFlows((current) => current.filter((flow) => flow.id !== id))
+  }
+
+  /** Rotates through a node's seats so two tokens stopped at the same
+   * stop don't land on top of each other. Deliberately not real occupancy
+   * tracking — a wrong guess here costs a slight overlap, and the
+   * bookkeeping to do better would outweigh that. */
+  function nextSeatSlot(nodeId: NodeId) {
+    const next = (seatCountersRef.current.get(nodeId) ?? 0) + 1
+    seatCountersRef.current.set(nodeId, next)
+    return next
   }
 
   function registerToken(id: string, el: SVGCircleElement | null) {
@@ -142,6 +177,18 @@ export function usePipelineAnimation() {
 
     const handleEnd = () => {
       el.removeEventListener('transitionend', handleEnd)
+      // Settle into the node's artwork rather than stopping dead on its
+      // center: onto the floor of the lake, into a slot of the queue, into
+      // a cell of the grid. runSegment clears `translate` on the way out,
+      // so this lasts exactly as long as the token is stopped here.
+      const seat = nodeSeat(arrivalNodeId, nextSeatSlot(arrivalNodeId))
+      if (seat) {
+        el.style.setProperty(
+          'transition',
+          'translate var(--motion-duration-slow) var(--motion-ease)',
+        )
+        el.style.setProperty('translate', `${seat.x}px ${seat.y}px`)
+      }
       updateFlow(id, { arrivedAt: arrivalNodeId })
       onDone()
     }
@@ -166,9 +213,27 @@ export function usePipelineAnimation() {
     window.setTimeout(callback, prefersReducedMotion ? 20 : delayMs)
   }
 
-  function runTrigger(id: string, trigger: Trigger, onSettled: () => void) {
+  function runTrigger(
+    id: string,
+    trigger: Trigger,
+    onSettled: () => void,
+    kind: FlowInstance['kind'],
+  ) {
     const runStep: StepRunner = (segment, arrival, onDone) =>
       runSegment(id, SEGMENTS[segment], arrival, onDone)
+
+    // Applied here rather than inside the sequences themselves so the
+    // pause table stays one description of the pipeline, not two.
+    // Jittered per flow, not fixed: a shared dwell would march every
+    // token through the pipeline in lockstep, which is the one thing that
+    // would make background traffic read as an animation loop rather than
+    // as load.
+    const dwell =
+      kind === 'ambient'
+        ? AMBIENT_DWELL_SCALE * (0.75 + Math.random() * 0.5)
+        : 1
+    const scheduleForKind = (callback: () => void, delayMs: number) =>
+      schedule(callback, delayMs * dwell)
 
     runFlowLegs(
       getFlow(trigger),
@@ -187,7 +252,7 @@ export function usePipelineAnimation() {
         updateFlow(id, { phase: finalPhase })
         onSettled()
       },
-      schedule,
+      scheduleForKind,
     )
   }
 
@@ -216,7 +281,7 @@ export function usePipelineAnimation() {
       const pending = pendingStartsRef.current.get(flow.id)
       if (!pending) continue
       pendingStartsRef.current.delete(flow.id)
-      runTrigger(flow.id, pending.trigger, pending.onSettled)
+      runTrigger(flow.id, pending.trigger, pending.onSettled, flow.kind)
     }
   }, [flows])
 
@@ -254,6 +319,17 @@ export function usePipelineAnimation() {
         spawnAmbientFlow()
         queueNextSpawn()
       }, randomSpawnDelay())
+    }
+
+    // Seed a few immediately. Left to the loop alone the diagram spends
+    // its first half-minute nearly empty while it fills to the cap, and an
+    // empty pipeline is the wrong first impression of a system that is
+    // supposed to look like it's running. Their jittered dwell fans them
+    // out within a stop or two, so this doesn't read as a starting gun.
+    for (let i = 0; i < 3; i++) {
+      window.setTimeout(() => {
+        if (!cancelled) spawnAmbientFlow()
+      }, i * 900)
     }
 
     queueNextSpawn()
@@ -297,14 +373,19 @@ export function usePipelineAnimation() {
     // — that's what redriving a queue actually does.
     for (const flow of flows.filter((f) => f.phase === 'in-dlq')) {
       if (flow.kind === 'ambient') travelingAmbientRef.current += 1
-      runTrigger(flow.id, 'redrive', () => {
-        if (flow.kind === 'ambient') {
-          travelingAmbientRef.current -= 1
-          removeFlow(flow.id)
-        } else {
-          highlightedIdRef.current = null
-        }
-      })
+      runTrigger(
+        flow.id,
+        'redrive',
+        () => {
+          if (flow.kind === 'ambient') {
+            travelingAmbientRef.current -= 1
+            removeFlow(flow.id)
+          } else {
+            highlightedIdRef.current = null
+          }
+        },
+        flow.kind,
+      )
     }
   }
 

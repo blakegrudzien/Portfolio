@@ -3,9 +3,7 @@ import { cx } from '../../utils/cx'
 import { NodeInfoPanel } from './NodeInfoPanel'
 import styles from './PipelineDiagram.module.css'
 import {
-  NODE_HEIGHT,
   NODE_INFO,
-  NODE_WIDTH,
   NODES,
   REGIONS,
   STATIC_EDGES,
@@ -14,6 +12,7 @@ import {
   type DiagramNode,
   type NodeId,
 } from './pipelineData'
+import { NodeGlyph } from './pipelineGlyphs'
 import { TelemetryPreview } from './TelemetryPreview'
 import { usePipelineAnimation } from './usePipelineAnimation'
 
@@ -25,20 +24,6 @@ function nodeAccessibleLabel(node: DiagramNode): string {
     : `${label}. ${info.context}`
 }
 
-// The kinesis/SQS particle effects sit a fixed offset above their node,
-// spread across three points — derived from each node's own x/y (rather
-// than restated as independent magic numbers) so they can't silently drift
-// out of alignment if a node's position in NODES ever changes.
-function threeDotPositions(node: DiagramNode) {
-  return [node.x - 15, node.x, node.x + 15].map((dotX) => ({
-    cx: dotX,
-    cy: node.y - 38,
-  }))
-}
-
-const kinesisNode = getNode('kinesis')
-const sqsNode = getNode('sqs')
-const lambdaNode = getNode('lambda')
 const slackNode = getNode('slack')
 
 export function PipelineDiagram() {
@@ -47,14 +32,6 @@ export function PipelineDiagram() {
   const [showRegions, setShowRegions] = useState(false)
   const [activeInfoId, setActiveInfoId] = useState<NodeId | null>(null)
 
-  // Which flow (if any) is sitting at each stop that has its own effect.
-  // Keyed on the occupying flow's id so the one-shot CSS animation remounts
-  // — and therefore replays — when a different token takes its place.
-  const occupantAt = (nodeId: NodeId) =>
-    flows.find((flow) => flow.arrivedAt === nodeId)?.id
-  const kinesisOccupant = occupantAt('kinesis')
-  const sqsOccupant = occupantAt('sqs')
-  const lambdaOccupant = occupantAt('lambda')
   const athenaOccupied = flows.some((flow) => flow.arrivedAt === 'athena')
 
   // The accent node highlight tracks the visitor's own telemetry only —
@@ -95,7 +72,7 @@ export function PipelineDiagram() {
           the whole diagram a name without claiming it's a single image. */}
           <svg
             className={styles.diagram}
-            viewBox="0 0 1180 440"
+            viewBox="0 0 1200 530"
             aria-label="Telemetry pipeline diagram"
           >
             {showRegions &&
@@ -129,120 +106,88 @@ export function PipelineDiagram() {
             ))}
 
             {NODES.map((node) => (
-              <g
-                key={node.id}
-                tabIndex={0}
-                role="button"
-                aria-label={nodeAccessibleLabel(node)}
-                transform={`translate(${node.x - NODE_WIDTH / 2}, ${node.y - NODE_HEIGHT / 2})`}
-                className={cx(
-                  styles.node,
-                  highlightedFlowNode === node.id && styles.nodeActive,
-                  activeInfoId === node.id && styles.nodeInfoActive,
-                  node.id === 'athena' && athenaOccupied && styles.queryPulse,
-                )}
-                onMouseEnter={() => setActiveInfoId(node.id)}
-                onMouseLeave={() =>
-                  setActiveInfoId((cur) => (cur === node.id ? null : cur))
-                }
-                onFocus={() => setActiveInfoId(node.id)}
-                onBlur={() =>
-                  setActiveInfoId((cur) => (cur === node.id ? null : cur))
-                }
-                onClick={() => setActiveInfoId(node.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault()
-                    setActiveInfoId(node.id)
+              // Two nested groups on purpose: the outer one only places
+              // the node, so a CSS transform animation on the inner one
+              // (Athena's query pulse) can't clobber the positioning the
+              // way it would if both lived on a single element.
+              <g key={node.id} transform={`translate(${node.x}, ${node.y})`}>
+                <g
+                  tabIndex={0}
+                  role="button"
+                  aria-label={nodeAccessibleLabel(node)}
+                  className={cx(
+                    styles.node,
+                    highlightedFlowNode === node.id && styles.nodeActive,
+                    activeInfoId === node.id && styles.nodeInfoActive,
+                    node.id === 'athena' && athenaOccupied && styles.queryPulse,
+                  )}
+                  onMouseEnter={() => setActiveInfoId(node.id)}
+                  onMouseLeave={() =>
+                    setActiveInfoId((cur) => (cur === node.id ? null : cur))
                   }
-                }}
-              >
-                <rect width={NODE_WIDTH} height={NODE_HEIGHT} rx={10} />
-                <text x={NODE_WIDTH / 2} y={NODE_HEIGHT / 2}>
-                  {node.lines.map((line, i) => (
-                    <tspan
-                      key={line}
-                      x={NODE_WIDTH / 2}
-                      dy={
-                        i === 0
-                          ? node.lines.length > 1
-                            ? '-0.3em'
-                            : '0.32em'
-                          : '1.1em'
-                      }
-                    >
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
+                  onFocus={() => setActiveInfoId(node.id)}
+                  onBlur={() =>
+                    setActiveInfoId((cur) => (cur === node.id ? null : cur))
+                  }
+                  onClick={() => setActiveInfoId(node.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      setActiveInfoId(node.id)
+                    }
+                  }}
+                >
+                  {/* Dropping the boxes also drops what used to look and
+                      behave clickable, which would leave the hover info
+                      undiscoverable. The affordance moves to these two:
+                      an invisible, generous hit target, and an outline
+                      that appears on hover or keyboard focus. */}
+                  <rect
+                    className={styles.hitArea}
+                    x={-node.width / 2}
+                    y={-node.height / 2}
+                    width={node.width}
+                    height={node.height}
+                  />
+                  <rect
+                    className={styles.nodeOutline}
+                    x={-node.width / 2}
+                    y={-node.height / 2}
+                    width={node.width}
+                    height={node.height}
+                    rx={10}
+                  />
+                  <NodeGlyph id={node.id} />
+                  <text className={styles.nodeLabel} y={node.height / 2 + 15}>
+                    {node.lines.map((line, i) => (
+                      <tspan key={line} x={0} dy={i === 0 ? 0 : '1.15em'}>
+                        {line}
+                      </tspan>
+                    ))}
+                  </text>
+                </g>
               </g>
             ))}
 
             {notified && (
-              <text x={1060} y="380" className={styles.notifyLabel}>
+              <text
+                x={slackNode.x}
+                y={slackNode.y - slackNode.height / 2 - 10}
+                className={styles.notifyLabel}
+              >
                 notified
               </text>
             )}
 
-            {/* Per-stop effects — keyed on whichever flow is currently at
-                that stop, so the element remounts (and its one-shot CSS
-                animation replays) each time a different token arrives.
-                Any flow triggers these, ambient traffic included: they
-                signal "the pipeline is doing work here", not "your file is
-                here" — that distinction is what the accent highlight is
-                for. */}
-            {kinesisOccupant && (
-              <g key={kinesisOccupant}>
-                {threeDotPositions(kinesisNode).map((pos, i) => (
-                  <circle
-                    key={i}
-                    className={styles.streamDot}
-                    cx={pos.cx}
-                    cy={pos.cy}
-                    r={3}
-                  />
-                ))}
-              </g>
-            )}
-
-            {sqsOccupant && (
-              <g key={sqsOccupant}>
-                {threeDotPositions(sqsNode).map((pos, i) => (
-                  <circle
-                    key={i}
-                    className={styles.queueDot}
-                    cx={pos.cx}
-                    cy={pos.cy}
-                    r={3}
-                  />
-                ))}
-              </g>
-            )}
-
-            {lambdaOccupant && (
-              <circle
-                key={lambdaOccupant}
-                className={styles.pingBurst}
-                cx={lambdaNode.x}
-                cy={lambdaNode.y}
-                r={4}
-              />
-            )}
-
-            {notified && (
-              <circle
-                className={styles.pingBurst}
-                cx={slackNode.x}
-                cy={slackNode.y}
-                r={4}
-              />
-            )}
-
             {/* Every token in flight — ambient background traffic and the
                 visitor's own telemetry alike. They differ only in size and
-                color: the mechanism moving them is identical, so effects,
-                pacing and failure handling apply to both without special
-                cases. The DLQ settle animation is highlighted-only, since
+                color: the mechanism moving them is identical, so pacing and
+                failure handling apply to both without special cases. The
+                one inversion is inside the parser — a token keeping its
+                normal fill on that solid black box would simply vanish,
+                and the point of the box is that the file goes *into*
+                something opaque, not that it disappears. The DLQ settle
+                animation is highlighted-only, since
                 it animates *from* accent, a color ambient tokens never
                 have. Each token's motion is driven imperatively via its
                 registered element (see usePipelineAnimation). */}
@@ -258,6 +203,7 @@ export function PipelineDiagram() {
                   flow.kind === 'highlighted' &&
                     flow.phase === 'in-dlq' &&
                     styles.tokenHeld,
+                  flow.arrivedAt === 'parser' && styles.tokenInParser,
                 )}
                 r={flow.kind === 'highlighted' ? 8 : 4}
               />
