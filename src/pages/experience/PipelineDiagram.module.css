@@ -14,7 +14,6 @@
 }
 
 .wrapper {
-  --pipeline-segment-duration: 450ms;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -100,15 +99,13 @@
   transition: stroke var(--motion-duration-base) var(--motion-ease);
 }
 
-.nodeActive .glyphLogo {
-  stroke: var(--color-accent);
-}
-
-/* The parser's black box and the Slack mark — the only filled shapes in
-   the diagram. Both are explained where they're drawn. */
-.glyphSolid {
-  fill: var(--color-ink);
-  stroke: none;
+/* The parser's hatch fill. Thinner than the house stroke on purpose:
+   it's texture standing in for contents nobody gets to see, not a
+   drawing of anything. */
+.hatchLine {
+  stroke: var(--color-ink-muted);
+  stroke-width: 1;
+  opacity: 0.45;
 }
 
 .glyphMark {
@@ -126,111 +123,84 @@
   text-anchor: middle;
 }
 
-/* Hover/focus reveal — deliberately ink, not accent, so it reads as a
-   different meaning than "the token is here right now" (.nodeActive).
-   Defined before .nodeActive so if both apply at once (rare, but possible
-   if the token happens to be sitting at the node being inspected), the
-   accent state visually wins — that one carries the more essential info. */
+/* Hover/focus reveal. This used to be ink, because accent was reserved
+   for "the file you sent is here" — and with that gone, accent is free and
+   inspection is the only state a node has. It's also the diagram's one
+   piece of colour now, which is what makes the affordance findable.
+   Accent on the page background is 5.60:1. */
 .nodeInfoActive .nodeOutline {
-  stroke: var(--color-ink);
-}
-
-.nodeActive .nodeOutline {
   stroke: var(--color-accent);
   stroke-width: 2;
 }
 
-/* Accent on the artwork itself, not just its outline: with no fill left to
-   tint, the stroke is the only thing that can carry the state. Accent on
-   the page background is 5.60:1, so this stays legible. */
-.nodeActive .glyph {
+.nodeInfoActive .glyph,
+.nodeInfoActive .glyphLogo {
   stroke: var(--color-accent);
 }
 
-.nodeActive .glyphSolid {
-  fill: var(--color-accent);
-  stroke: none;
+.nodeInfoActive .hatchLine {
+  stroke: var(--color-accent);
 }
 
-.nodeActive .glyphMark {
+.nodeInfoActive .glyphMark {
   fill: var(--color-accent);
-  stroke: none;
 }
 
 /* Element opacity is driven imperatively as a token starts moving, so the
    muted look of background traffic rides on fill-opacity instead — the two
-   don't fight that way. */
+   don't fight that way. Fill is set on the group and inherited, so every
+   state below restyles the readings and the file together. */
 .token {
   opacity: 0;
+  /* offset-path defaults to offset-rotate: auto, which turns the element
+     to face along the path. That was invisible while a token was a circle;
+     now that it's a rectangle, files arriving on the two diagonal edges
+     land in the output bucket and the DLQ visibly tilted. A file has an
+     orientation and it isn't the direction it travelled in. */
+  offset-rotate: 0deg;
 }
 
-.tokenHighlighted {
-  fill: var(--color-accent);
+/* The payload's whole shape story, in one transition list. Geometry is
+   animated as CSS properties (x/y/width/height on rects, r/cx/cy on the
+   notch) rather than swapped, so batching, compression and the conversion
+   to Parquet each read as one continuous thing happening to one object.
+   Everything runs at the base duration: the stops that transform the file
+   now hold it for only ~200ms, and at the slow duration a file would
+   leave Lambda still halfway open. Durations are tokens, so the global
+   reduced-motion override collapses them with everything else. */
+.tokenDot,
+.tokenBody,
+.tokenMarks,
+.tokenMarks rect,
+.tokenNotch {
+  transition:
+    translate var(--motion-duration-base) var(--motion-ease),
+    opacity var(--motion-duration-base) var(--motion-ease),
+    x var(--motion-duration-base) var(--motion-ease),
+    y var(--motion-duration-base) var(--motion-ease),
+    width var(--motion-duration-base) var(--motion-ease),
+    height var(--motion-duration-base) var(--motion-ease),
+    r var(--motion-duration-base) var(--motion-ease),
+    cx var(--motion-duration-base) var(--motion-ease),
+    cy var(--motion-duration-base) var(--motion-ease);
 }
 
-/* Ambient background traffic — smaller and muted, never accent-colored, so
-   "the one you're tracking" stays unambiguous even in a crowd. */
-.tokenAmbient {
+/* Every file looks the same now: there is no longer a flow the visitor
+   owns, so there is nothing for a second colour to distinguish. */
+.tokenBody,
+.tokenDot {
   fill: var(--color-ink-muted);
-  fill-opacity: 0.5;
+  fill-opacity: 0.55;
 }
 
-/* The remaining per-stop effect. The particle bursts that used to sit
-   above Kinesis, SQS and Lambda are gone: they animated *next to* a node
-   to suggest what it was doing, which is exactly the job the node's own
-   silhouette now does, and the token seating itself into that silhouette
-   says it better than dots orbiting outside it did. */
-
-/* Athena: the destination node briefly grows, suggesting a query landing
-   and resolving. transform-box/origin keep the scale centered on the
-   node itself rather than the SVG's own (0,0) corner. */
-@keyframes queryPulse {
-  0% {
-    transform: scale(1);
-  }
-  35% {
-    transform: scale(1.08);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-.queryPulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: queryPulse 0.5s ease-out;
-}
-
-/* Inside the parser, the token inverts to the page background: on that
-   solid ink fill its normal color is invisible. Set after the kind
-   classes so it wins over both, and as a plain fill so the imperatively
-   driven opacity is untouched. */
-.tokenInParser {
+/* Marks and the notch are cut out of the file in page background, so they
+   read as features of the thing rather than ink laid on top of it. Opaque
+   even on ambient traffic, which is otherwise half-transparent — a
+   half-transparent hole isn't a hole. */
+.tokenMarks rect,
+.tokenNotch {
   fill: var(--color-bg);
   fill-opacity: 1;
-}
-
-/* DLQ: the token itself settles into a muted, held color rather than
-   staying accent-bright — it's not "in transit" anymore, it's waiting. */
-@keyframes settleIntoHold {
-  from {
-    fill: var(--color-accent);
-  }
-  to {
-    fill: var(--color-ink-muted);
-  }
-}
-
-.tokenHeld {
-  animation: settleIntoHold 0.5s ease-out forwards;
-}
-
-.notifyLabel {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  fill: var(--color-ink-muted);
-  text-anchor: middle;
 }
 
 .status {
@@ -288,4 +258,40 @@
 
 .regionsToggle:hover {
   color: var(--color-ink);
+}
+
+/* Slack's unread badge, in Slack's own red — see pipelineGlyphs for why
+   those four brand hues live outside tokens.css. The ring around it is the
+   page background rather than a border color, so the badge reads as
+   sitting on top of the mark instead of being part of it. */
+.slackBadge circle {
+  fill: #e01e5a;
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.slackBadge text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  fill: #ffffff;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+/* The device emission. Short, small, and on a line that's already there:
+   this fires every few seconds in the busiest corner of the diagram, so
+   it has to be something you notice only if you happen to be looking. */
+@keyframes boltThrow {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  45% {
+    translate: 5px 0;
+  }
+}
+
+.deviceEvent {
+  animation: boltThrow 420ms var(--motion-ease);
 }

@@ -25,7 +25,7 @@ import type { NodeId } from './pipelineData'
 // follow is that a *logo* is reproduced, not redrawn — an approximation of
 // a mark everyone recognizes reads as a mistake, not as a house style.
 
-function Device() {
+function Device({ eventKey }: { eventKey?: string }) {
   return (
     <>
       {/* A deadbolt throwing into a door frame, and a video doorbell.
@@ -33,7 +33,12 @@ function Device() {
           telemetry came from several device types and two shapes say that
           without a word of copy. */}
       <path d="M -56,-18 L -56,20" />
-      <path d="M -46,1 L -56,1" />
+      {/* Keyed, so React remounts it on every emission and its one-shot
+          animation replays. The bolt drawing back and throwing again is
+          about the quietest "that device just did something" available —
+          it's a 5px move on a line that's already there, in the corner of
+          the diagram that fires most often. */}
+      <path key={eventKey} className={styles.deviceEvent} d="M -46,1 L -56,1" />
       <rect x={-46} y={-16} width={28} height={34} rx={7} />
       <circle cx={-32} cy={1} r={6.5} />
       {/* A horizontal slot, not a vertical one: a line through the middle
@@ -113,28 +118,44 @@ function Lambda() {
   // The AWS Lambda lambda. A drawn form here would have to invent a
   // silhouette for "a function runs" — there isn't an honest one, and the
   // mark is instantly recognized by exactly the people this page is for.
+  // Sits left of centre to leave the file somewhere to be: dead-centre it
+  // put an accent token on an accent mark and the two became one blob.
   return (
     <g className={styles.glyphLogo}>
-      <path d="M -5,-20 L 15,20" />
-      <path d="M 0,-4 L -14,20" />
+      <path d="M -17,-20 L 3,20" />
+      <path d="M -12,-4 L -26,20" />
     </g>
   )
 }
 
 function Parser() {
-  // The one solid-filled node in a diagram where every other stop shows
-  // its internals — a literal black box. It's firmware-team owned and this
-  // project deliberately treats it as a pluggable step it doesn't need to
-  // understand, so drawing internals it doesn't have would be a lie.
+  // A black box in the metaphorical sense, which is the sense that was
+  // meant: the one closed, sealed form in a diagram where every other
+  // stop is an open one you can see the working of. The hatch says
+  // "contents not shown" without painting a literal black rectangle,
+  // which read as a hole in the page rather than as a component.
   return (
-    <rect
-      className={styles.glyphSolid}
-      x={-44}
-      y={-22}
-      width={88}
-      height={44}
-      rx={6}
-    />
+    <>
+      <defs>
+        <pattern
+          id="parser-hatch"
+          width={7}
+          height={7}
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <path className={styles.hatchLine} d="M 0,0 L 0,7" />
+        </pattern>
+      </defs>
+      <rect
+        x={-44}
+        y={-22}
+        width={88}
+        height={44}
+        rx={6}
+        fill="url(#parser-hatch)"
+      />
+    </>
   )
 }
 
@@ -231,7 +252,10 @@ function Slack() {
   )
 }
 
-const GLYPHS: Record<NodeId, () => React.JSX.Element> = {
+const GLYPHS: Record<
+  NodeId,
+  (props: { eventKey?: string }) => React.JSX.Element
+> = {
   device: Device,
   condenser: Condenser,
   kinesis: Kinesis,
@@ -245,13 +269,13 @@ const GLYPHS: Record<NodeId, () => React.JSX.Element> = {
   slack: Slack,
 }
 
-export function NodeGlyph({ id }: { id: NodeId }) {
+export function NodeGlyph({ id, eventKey }: { id: NodeId; eventKey?: string }) {
   const Glyph = GLYPHS[id]
   // Stroke styling lives on this one wrapper rather than on every path, so
   // the hover/active states can restyle a whole node with one selector.
   return (
     <g className={styles.glyph}>
-      <Glyph />
+      <Glyph eventKey={eventKey} />
     </g>
   )
 }

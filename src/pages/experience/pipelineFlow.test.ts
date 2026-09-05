@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   COMMON_SEQUENCE,
   DEFAULT_PAUSE_MS,
+  createDotOffsets,
+  payloadStage,
   FAILURE_SEQUENCE,
   REDRIVE_SEQUENCE,
   SUCCESS_SEQUENCE,
@@ -150,5 +152,51 @@ describe('runFlowLegs', () => {
       ...REDRIVE_SEQUENCE.map((s) => `${s.segment}->${s.arrival}`),
       ...SUCCESS_SEQUENCE.map((s) => `${s.segment}->${s.arrival}`),
     ])
+  })
+})
+
+describe('createDotOffsets', () => {
+  it('emits between four and six readings', () => {
+    // 0 and 0.999 bracket the range the count is drawn from.
+    expect(createDotOffsets(() => 0)).toHaveLength(4)
+    expect(createDotOffsets(() => 0.999)).toHaveLength(6)
+  })
+
+  it('spreads them apart rather than stacking them on one point', () => {
+    const offsets = createDotOffsets(() => 0.5)
+    const unique = new Set(offsets.map((o) => `${o.x},${o.y}`))
+    expect(unique.size).toBe(offsets.length)
+    // All inside the ring's outer radius, so a cluster can never drift far
+    // enough from its own token to read as separate traffic.
+    for (const offset of offsets) {
+      expect(Math.hypot(offset.x, offset.y)).toBeLessThanOrEqual(10)
+    }
+  })
+})
+
+describe('payloadStage', () => {
+  it('starts as separate readings and becomes one file at the condenser', () => {
+    expect(payloadStage(null)).toBe('events')
+    expect(payloadStage('device')).toBe('events')
+    expect(payloadStage('condenser')).toBe('file')
+  })
+
+  it('stays compressed from Firehose until Lambda opens it', () => {
+    // The span nothing can see inside — which is exactly why no stop in it
+    // can catch a malformed file, and why the DLQ has to exist.
+    expect(payloadStage('kinesis')).toBe('gzipped')
+    expect(payloadStage('s3lake')).toBe('gzipped')
+    expect(payloadStage('sqs')).toBe('gzipped')
+    expect(payloadStage('lambda')).toBe('file')
+  })
+
+  it('is columnar only after the parser output is converted', () => {
+    expect(payloadStage('parser')).toBe('file')
+    expect(payloadStage('output')).toBe('parquet')
+    expect(payloadStage('athena')).toBe('parquet')
+  })
+
+  it('treats a file waiting in the DLQ as one that was opened and read', () => {
+    expect(payloadStage('dlq')).toBe('file')
   })
 })

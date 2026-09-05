@@ -8,12 +8,12 @@ import {
   REGIONS,
   STATIC_EDGES,
   getNode,
-  statusText,
+  pipelineStatus,
   type DiagramNode,
   type NodeId,
 } from './pipelineData'
+import { payloadStage } from './pipelineFlow'
 import { NodeGlyph } from './pipelineGlyphs'
-import { TelemetryPreview } from './TelemetryPreview'
 import { usePipelineAnimation } from './usePipelineAnimation'
 
 function nodeAccessibleLabel(node: DiagramNode): string {
@@ -27,19 +27,16 @@ function nodeAccessibleLabel(node: DiagramNode): string {
 const slackNode = getNode('slack')
 
 export function PipelineDiagram() {
-  const { flows, phase, notified, registerToken, addTelemetry, redrive } =
+  const { flows, dlqCount, redriving, registerToken, redrive } =
     usePipelineAnimation()
   const [showRegions, setShowRegions] = useState(false)
   const [activeInfoId, setActiveInfoId] = useState<NodeId | null>(null)
 
-  const athenaOccupied = flows.some((flow) => flow.arrivedAt === 'athena')
-
-  // The accent node highlight tracks the visitor's own telemetry only —
-  // background traffic constantly re-accenting nodes would both add visual
-  // noise and dilute what accent means everywhere else in the diagram.
-  const highlightedFlowNode = flows.find(
-    (flow) => flow.kind === 'highlighted',
-  )?.arrivedAt
+  // The newest flow. Spawning appends, and the only removal is Athena
+  // evicting its oldest, so the last entry is always the most recent
+  // emission — enough to key the device's animation off without keeping a
+  // second piece of state that says the same thing.
+  const latestEmissionId = flows[flows.length - 1]?.id
 
   const activeNode = activeInfoId ? getNode(activeInfoId) : undefined
   const activeInfo = activeNode
@@ -47,13 +44,13 @@ export function PipelineDiagram() {
         label: activeNode.lines.join(' '),
         context: NODE_INFO[activeNode.id].context,
         tradeoff: NODE_INFO[activeNode.id].tradeoff,
+        payload: NODE_INFO[activeNode.id].payload,
       }
     : null
 
   return (
     <div className={styles.container}>
       <div className={styles.layout}>
-        <TelemetryPreview phase={phase} />
         <div className={styles.wrapper}>
           <button
             type="button"
@@ -72,7 +69,7 @@ export function PipelineDiagram() {
           the whole diagram a name without claiming it's a single image. */}
           <svg
             className={styles.diagram}
-            viewBox="0 0 1200 530"
+            viewBox="0 0 1200 574"
             aria-label="Telemetry pipeline diagram"
           >
             {showRegions &&
@@ -117,9 +114,7 @@ export function PipelineDiagram() {
                   aria-label={nodeAccessibleLabel(node)}
                   className={cx(
                     styles.node,
-                    highlightedFlowNode === node.id && styles.nodeActive,
                     activeInfoId === node.id && styles.nodeInfoActive,
-                    node.id === 'athena' && athenaOccupied && styles.queryPulse,
                   )}
                   onMouseEnter={() => setActiveInfoId(node.id)}
                   onMouseLeave={() =>
@@ -157,7 +152,12 @@ export function PipelineDiagram() {
                     height={node.height}
                     rx={10}
                   />
-                  <NodeGlyph id={node.id} />
+                  <NodeGlyph
+                    id={node.id}
+                    eventKey={
+                      node.id === 'device' ? latestEmissionId : undefined
+                    }
+                  />
                   <text className={styles.nodeLabel} y={node.height / 2 + 15}>
                     {node.lines.map((line, i) => (
                       <tspan key={line} x={0} dy={i === 0 ? 0 : '1.15em'}>
@@ -169,14 +169,20 @@ export function PipelineDiagram() {
               </g>
             ))}
 
-            {notified && (
-              <text
-                x={slackNode.x}
-                y={slackNode.y - slackNode.height / 2 - 10}
-                className={styles.notifyLabel}
+            {/* Slack's own notification badge, sitting on its mark. It
+                counts the whole DLQ rather than announcing each arrival:
+                NODE_INFO records that this alert became a daily digest
+                instead of a realtime ping, and a number that goes up and
+                gets cleared is what a digest looks like. */}
+            {dlqCount > 0 && (
+              <g
+                className={styles.slackBadge}
+                transform={`translate(${slackNode.x + 20}, ${slackNode.y - 20})`}
+                aria-hidden="true"
               >
-                notified
-              </text>
+                <circle r={9} />
+                <text y={0.5}>{dlqCount}</text>
+              </g>
             )}
 
             {/* Every token in flight — ambient background traffic and the
@@ -187,61 +193,142 @@ export function PipelineDiagram() {
                 normal fill on that solid black box would simply vanish,
                 and the point of the box is that the file goes *into*
                 something opaque, not that it disappears. The DLQ settle
-                animation is highlighted-only, since
-                it animates *from* accent, a color ambient tokens never
-                have. Each token's motion is driven imperatively via its
-                registered element (see usePipelineAnimation). */}
-            {flows.map((flow) => (
-              <circle
-                key={flow.id}
-                ref={(el) => registerToken(flow.id, el)}
-                className={cx(
-                  styles.token,
-                  flow.kind === 'highlighted'
-                    ? styles.tokenHighlighted
-                    : styles.tokenAmbient,
-                  flow.kind === 'highlighted' &&
-                    flow.phase === 'in-dlq' &&
-                    styles.tokenHeld,
-                  flow.arrivedAt === 'parser' && styles.tokenInParser,
-                )}
-                r={flow.kind === 'highlighted' ? 8 : 4}
-              />
-            ))}
+                animation is highlighted-only, since it animates *from*
+                accent, a color ambient tokens never have. Each token's
+                motion is driven imperatively via its registered element
+                (see usePipelineAnimation). */}
+            {flows.map((flow) => {
+              // The payload is a file, so it's drawn as one: a rectangle,
+              // not a dot. A device emits several separate readings and
+              // the condenser is what makes them into a single file, so
+              // before that stop the token is several small marks that
+              // converge — the batching is the thing you watch happen.
+              const stage = payloadStage(flow.arrivedAt)
+              const merged = stage !== 'events'
+              const height = 10
+              const openWidth = 15
+              // Squeezed along one axis only. Something that shrinks in
+              // both directions has just got further away; something that
+              // narrows while staying as tall has been compressed.
+              const width = stage === 'gzipped' ? openWidth * 0.55 : openWidth
+              const eventSize = 4.8
+              // Compression genuinely hides the defect — which is the
+              // whole reason nothing upstream of the parser can catch it
+              // and the DLQ has to exist. The flaw shows on the readings,
+              // vanishes once the file is gzipped, and is back the moment
+              // Lambda opens it up again.
+              const defectVisible = flow.malformed && stage !== 'gzipped'
+              const inset = 1.6
+              return (
+                <g
+                  key={flow.id}
+                  ref={(el) => registerToken(flow.id, el)}
+                  className={styles.token}
+                >
+                  {flow.dots.map((dot, i) => (
+                    <rect
+                      key={i}
+                      className={styles.tokenDot}
+                      x={-eventSize / 2}
+                      y={-eventSize / 2}
+                      width={eventSize}
+                      height={eventSize}
+                      rx={1.2}
+                      style={{
+                        translate: merged ? '0 0' : `${dot.x}px ${dot.y}px`,
+                        opacity: merged ? 0 : 1,
+                      }}
+                    />
+                  ))}
+
+                  <rect
+                    className={styles.tokenBody}
+                    x={-width / 2}
+                    y={-height / 2}
+                    width={width}
+                    height={height}
+                    rx={2}
+                    style={{ opacity: merged ? 1 : 0 }}
+                  />
+
+                  {/* Bands across a narrowed file: it's been squeezed and
+                      strapped. Horizontal here and vertical for Parquet
+                      below, so the two states share one vocabulary —
+                      lines in the file — and are told apart by which way
+                      they run. */}
+                  <g
+                    className={styles.tokenMarks}
+                    style={{ opacity: stage === 'gzipped' ? 1 : 0 }}
+                  >
+                    {[-0.22, 0.22].map((at) => (
+                      <rect
+                        key={at}
+                        x={-width / 2 + inset}
+                        y={height * at}
+                        width={width - inset * 2}
+                        height={1}
+                      />
+                    ))}
+                  </g>
+
+                  {/* Columns. The same three stripes the Parquet output
+                      bucket is drawn with, so the file visibly becomes
+                      the thing that node stores. */}
+                  <g
+                    className={styles.tokenMarks}
+                    style={{ opacity: stage === 'parquet' ? 1 : 0 }}
+                  >
+                    {[-0.26, 0, 0.26].map((at) => (
+                      <rect
+                        key={at}
+                        x={width * at}
+                        y={-height / 2 + inset}
+                        width={1}
+                        height={height - inset * 2}
+                      />
+                    ))}
+                  </g>
+
+                  {/* A bite out of the corner, in page background: a flaw
+                      in the file rather than a badge stuck on it. */}
+                  <circle
+                    className={styles.tokenNotch}
+                    r={height * 0.26}
+                    cx={width / 2}
+                    cy={-height / 2}
+                    style={{ opacity: merged && defectVisible ? 1 : 0 }}
+                  />
+                  {/* Before the batch exists the flaw is in one reading,
+                      so it's there in the very first frame. */}
+                  <circle
+                    className={styles.tokenNotch}
+                    r={eventSize * 0.28}
+                    cx={(flow.dots[0]?.x ?? 0) + eventSize / 2}
+                    cy={(flow.dots[0]?.y ?? 0) - eventSize / 2}
+                    style={{ opacity: !merged && flow.malformed ? 1 : 0 }}
+                  />
+                </g>
+              )
+            })}
           </svg>
 
           <p className={styles.status} aria-live="polite">
-            {statusText[phase]}
+            {pipelineStatus(dlqCount, redriving)}
           </p>
 
           <div className={styles.controls}>
-            {(phase === 'idle' || phase === 'done-success') && (
-              <>
-                <button
-                  type="button"
-                  className={styles.primaryButton}
-                  onClick={() => addTelemetry('success')}
-                >
-                  Add correct telemetry
-                </button>
-                <button
-                  type="button"
-                  className={styles.secondaryButton}
-                  onClick={() => addTelemetry('failure')}
-                >
-                  Add incorrect telemetry
-                </button>
-              </>
-            )}
-            {phase === 'in-dlq' && (
-              <button
-                type="button"
-                className={styles.primaryButton}
-                onClick={redrive}
-              >
-                Redrive
-              </button>
-            )}
+            {/* The only control left. Everything else the diagram does, it
+                does on its own — but a backlog that nothing can clear is
+                a dead end, and clearing it is the one action an operator
+                actually takes here. */}
+            <button
+              type="button"
+              className={styles.primaryButton}
+              onClick={redrive}
+              disabled={dlqCount === 0 || redriving}
+            >
+              Redrive the DLQ
+            </button>
           </div>
         </div>
       </div>
