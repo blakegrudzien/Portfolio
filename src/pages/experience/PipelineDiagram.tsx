@@ -116,14 +116,21 @@ export function PipelineDiagram() {
                     styles.node,
                     activeInfoId === node.id && styles.nodeInfoActive,
                   )}
-                  onMouseEnter={() => setActiveInfoId(node.id)}
-                  onMouseLeave={() =>
-                    setActiveInfoId((cur) => (cur === node.id ? null : cur))
-                  }
+                  /* Selection is by click, not hover. The diagram runs on
+                  its own, so a reader watching it move drags the cursor
+                  across nodes constantly, and hover meant the panel below
+                  swapped content the whole time they were just watching.
+                  Click also gives touch devices the same behaviour, where
+                  there is no hover to rely on at all. Focus still selects,
+                  so tabbing through the nodes reads them in order. */
                   onFocus={() => setActiveInfoId(node.id)}
                   onBlur={() =>
                     setActiveInfoId((cur) => (cur === node.id ? null : cur))
                   }
+                  /* Plain set, not a toggle. Clicking a node focuses it
+                  first, so onFocus has already selected it by the time the
+                  click lands, and a toggle would immediately undo that and
+                  make clicking look broken. Deselecting is blur's job. */
                   onClick={() => setActiveInfoId(node.id)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {

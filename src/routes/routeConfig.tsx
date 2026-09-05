@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
       {
         path: paths.resume,
         element: <ResumePage />,
-        handle: { title: `Resume & Contact${suffix}` },
+        handle: { title: `Resume & contact${suffix}` },
       },
       {
         path: '*',

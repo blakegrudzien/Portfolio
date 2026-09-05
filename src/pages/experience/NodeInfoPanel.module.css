@@ -6,6 +6,15 @@
   background: var(--color-surface);
 }
 
+/* Held at the height of the tallest node's content (measured across
+   viewport widths down to 900px) so that moving between nodes never
+   reflows the page under the diagram. Only applied once something is
+   selected, so the panel at rest stays the size of its own prompt
+   instead of reserving a screenful of empty box. */
+.panelSelected {
+  min-height: 19rem;
+}
+
 .label {
   font-family: var(--font-mono);
   font-size: var(--text-sm);

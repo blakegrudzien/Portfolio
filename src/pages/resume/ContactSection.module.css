@@ -8,3 +8,8 @@
   font-family: var(--font-mono);
   font-size: var(--text-base);
 }
+
+.heading {
+  font-size: var(--text-base);
+  margin-bottom: var(--space-3);
+}

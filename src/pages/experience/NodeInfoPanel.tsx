@@ -1,3 +1,4 @@
+import { cx } from '../../utils/cx'
 import styles from './NodeInfoPanel.module.css'
 
 export interface NodeInfo {
@@ -9,7 +10,7 @@ export interface NodeInfo {
 
 export function NodeInfoPanel({ info }: { info: NodeInfo | null }) {
   return (
-    <div className={styles.panel}>
+    <div className={cx(styles.panel, info && styles.panelSelected)}>
       {info ? (
         <>
           <p className={styles.label}>{info.label}</p>
@@ -31,9 +32,8 @@ export function NodeInfoPanel({ info }: { info: NodeInfo | null }) {
         </>
       ) : (
         <p className={styles.empty}>
-          Hover or focus a step in the diagram to see what the payload looks
-          like there — and, for a few of them, the reasoning behind how it's
-          built.
+          Select a step in the diagram to see what the payload looks like there,
+          and for a few of them, the reasoning behind how it's built.
         </p>
       )}
     </div>
