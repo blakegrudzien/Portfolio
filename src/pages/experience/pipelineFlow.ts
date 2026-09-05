@@ -49,10 +49,15 @@ export type Trigger = 'success' | 'failure' | 'redrive'
 
 /** How often background traffic fails to parse. Still well above a real
  * pipeline's rate — a visitor has to see the DLQ actually accumulate
- * rather than take the failure story on faith — but lower than it was,
- * because throughput went up roughly fourfold and the old rate would now
- * bury the diagram in failures inside a minute. */
-export const AMBIENT_FAILURE_RATE = 0.1
+ * rather than take the failure story on faith — but below the 0.2 it was
+ * before throughput went up roughly fourfold, which would now bury the
+ * diagram in failures inside a minute.
+ *
+ * This governs the steady state only. It deliberately does not decide
+ * whether the failure pathway gets demonstrated at all: see the seeded
+ * failure in usePipelineAnimation for why that can't be left to a die
+ * roll. */
+export const AMBIENT_FAILURE_RATE = 0.15
 
 /** A device emits several discrete readings, not one file — the file is
  * something the condenser makes. These are the offsets those readings ride

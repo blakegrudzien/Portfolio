@@ -432,14 +432,14 @@ export function usePipelineAnimation() {
 
   // --- ambient background traffic -----------------------------------------
 
-  function spawnFlowOnSchedule() {
+  function spawnFlowOnSchedule(forcedOutcome?: 'success' | 'failure') {
     // Someone who asked for less motion shouldn't get perpetual background
     // traffic they never opted into. Their own telemetry still runs when
     // they click for it — that one is a deliberate action, not ambience.
     if (prefersReducedMotion()) return
     if (travelingRef.current >= MAX_TRAVELING) return
     const id = `flow-${idCounterRef.current++}`
-    const outcome = pickAmbientOutcome()
+    const outcome = forcedOutcome ?? pickAmbientOutcome()
     travelingRef.current += 1
 
     spawnFlow(
@@ -491,11 +491,20 @@ export function usePipelineAnimation() {
     // empty pipeline is the wrong first impression of a system that is
     // supposed to look like it's running. The jittered spawn interval
     // fans them out within a stop or two, so it isn't a starting gun.
-    for (let i = 0; i < 3; i++) {
+    // One of these is a guaranteed failure. At the steady-state rate the
+    // first one is a die roll — measured runs have taken anywhere from
+    // ten seconds to over a minute — and until it lands there is no
+    // backlog, no Slack badge and nothing for the Redrive button to do,
+    // so the entire failure pathway is invisible for an unbounded stretch
+    // of a visit. That's too much of the diagram's argument to leave to
+    // chance. It's seeded second, so the first thing a visitor sees is
+    // still an ordinary file going through.
+    const seeded: ('success' | 'failure')[] = ['success', 'failure', 'success']
+    seeded.forEach((outcome, i) => {
       window.setTimeout(() => {
-        if (!cancelled) spawnRef.current()
+        if (!cancelled) spawnRef.current(outcome)
       }, i * 400)
-    }
+    })
 
     queueNextSpawn()
     return () => {
