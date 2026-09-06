@@ -8,7 +8,7 @@ import { ChessScholarPage } from '../pages/projects/ChessScholarPage'
 import { ResumePage } from '../pages/resume/ResumePage'
 import { paths } from './paths'
 
-const suffix = ' — Blake Grudzien'
+const suffix = ' · Blake Grudzien'
 
 export const router = createBrowserRouter([
   {
@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       //
       // /projects and /projects/chess-scholar both render ChessScholarPage for now,
       // since there's only one project. When a second one exists, only the
-      // element on `projects` needs to change to a real index page — the
+      // element on `projects` needs to change to a real index page. The
       // chess-scholar route and its URL stay exactly as they are.
       {
         path: paths.projects,

@@ -1,4 +1,4 @@
-/** Joins conditional class names, dropping falsy values — the one place
+/** Joins conditional class names, dropping falsy values. The one place
  * this logic lives instead of being re-hand-rolled per component (some as
  * template-literal ternaries, some as `array.filter(Boolean).join(' ')`). */
 export function cx(

@@ -31,7 +31,7 @@
   border-color: var(--color-accent);
 }
 
-/* Left/right are distinguished by more than color alone — a corner badge
+/* Left/right are distinguished by more than color alone. A corner badge
    (via ::after) carries the same L/R distinction for anyone who can't
    rely on the accent-vs-ink fill difference. */
 .onLeft {
@@ -73,7 +73,7 @@
   opacity: 0.35;
 }
 
-/* opacity composites the whole element, focus ring included — at 0.35 the
+/* opacity composites the whole element, focus ring included. At 0.35 the
    accent outline nearly disappears against the page background. Full
    opacity while focused keeps the ring legible; the eliminated look isn't
    needed while a screen reader or keyboard user's attention is already on

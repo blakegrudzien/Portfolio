@@ -91,7 +91,7 @@ export function MarblePuzzle() {
             checked={mode === 'hard'}
             onChange={() => setMode('hard')}
           />
-          Hard — no visual hints
+          Hard: no visual hints
         </label>
         <label>
           <input
@@ -100,7 +100,7 @@ export function MarblePuzzle() {
             checked={mode === 'easy'}
             onChange={() => setMode('easy')}
           />
-          Easy — fade out ruled-out marbles
+          Easy: fade out ruled-out marbles
         </label>
       </div>
 

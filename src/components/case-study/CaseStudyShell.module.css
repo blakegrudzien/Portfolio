@@ -55,7 +55,7 @@
 }
 
 /* Sections share one spacing rule via the parent rather than each section
-   managing its own top margin — keeps CaseStudySection agnostic of its
+   managing its own top margin, which keeps CaseStudySection agnostic of its
    position among siblings. */
 .sections > * + * {
   margin-top: var(--space-8);

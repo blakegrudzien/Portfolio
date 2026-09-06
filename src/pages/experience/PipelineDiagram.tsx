@@ -34,7 +34,7 @@ export function PipelineDiagram() {
 
   // The newest flow. Spawning appends, and the only removal is Athena
   // evicting its oldest, so the last entry is always the most recent
-  // emission — enough to key the device's animation off without keeping a
+  // emission, which is enough to key the device's animation off without keeping a
   // second piece of state that says the same thing.
   const latestEmissionId = flows[flows.length - 1]?.id
 
@@ -64,7 +64,7 @@ export function PipelineDiagram() {
           {/* No role="img": this SVG holds genuinely interactive,
           individually-focusable node controls (role="button" below), and
           role="img" tells assistive tech to flatten a subtree into one
-          static picture — in tension with descendants meant to be
+          static picture, which is in tension with descendants meant to be
           tabbed to and read individually. aria-label alone still gives
           the whole diagram a name without claiming it's a single image. */}
           <svg
@@ -192,11 +192,11 @@ export function PipelineDiagram() {
               </g>
             )}
 
-            {/* Every token in flight — ambient background traffic and the
+            {/* Every token in flight: ambient background traffic and the
                 visitor's own telemetry alike. They differ only in size and
                 color: the mechanism moving them is identical, so pacing and
                 failure handling apply to both without special cases. The
-                one inversion is inside the parser — a token keeping its
+                one inversion is inside the parser, where a token keeping its
                 normal fill on that solid black box would simply vanish,
                 and the point of the box is that the file goes *into*
                 something opaque, not that it disappears. The DLQ settle
@@ -209,7 +209,7 @@ export function PipelineDiagram() {
               // not a dot. A device emits several separate readings and
               // the condenser is what makes them into a single file, so
               // before that stop the token is several small marks that
-              // converge — the batching is the thing you watch happen.
+              // converge. The batching is the thing you watch happen.
               const stage = payloadStage(flow.arrivedAt)
               const merged = stage !== 'events'
               const height = 10
@@ -271,8 +271,8 @@ export function PipelineDiagram() {
 
                   {/* Bands across a narrowed file: it's been squeezed and
                       strapped. Horizontal here and vertical for Parquet
-                      below, so the two states share one vocabulary —
-                      lines in the file — and are told apart by which way
+                      below, so the two states share one vocabulary,
+                      lines in the file, and are told apart by which way
                       they run. */}
                   <g
                     className={styles.tokenMarks}
@@ -336,7 +336,7 @@ export function PipelineDiagram() {
 
           <div className={styles.controls}>
             {/* The only control left. Everything else the diagram does, it
-                does on its own — but a backlog that nothing can clear is
+                does on its own, but a backlog that nothing can clear is
                 a dead end, and clearing it is the one action an operator
                 actually takes here. */}
             <button

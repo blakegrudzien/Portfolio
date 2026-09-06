@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-// Self-hosted fonts, latin subset only — the site is English-only, so the
+// Self-hosted fonts, latin subset only, since the site is English-only, so the
 // cyrillic/greek/vietnamese glyphs in the packages' umbrella weight files
 // would be dead weight. Weights match src/styles/tokens.css's --font-*.
 import '@fontsource/zilla-slab/latin-500.css'

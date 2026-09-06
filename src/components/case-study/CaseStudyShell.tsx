@@ -15,7 +15,7 @@ interface CaseStudyShellProps {
   tags?: string[]
   links?: LinkItem[]
   /** Not used until a second entry exists and /projects or /experience
-   * becomes a real index page — added now so that migration is a prop,
+   * becomes a real index page. Added now so that migration is a prop,
    * not a shell rewrite. */
   indexLink?: LinkItem
   children?: ReactNode

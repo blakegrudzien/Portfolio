@@ -1,5 +1,5 @@
 // Every node id in the diagram, as a closed union rather than a bare
-// `string` — a typo'd id (e.g. in a SequenceStep's `arrival`) becomes a
+// `string`, so a typo'd id (e.g. in a SequenceStep's `arrival`) becomes a
 // compile error instead of a silent no-op where nothing ever highlights.
 export type NodeId =
   | 'device'
@@ -20,8 +20,8 @@ export interface DiagramNode {
   x: number
   y: number
   /** The node's hit target and label anchor, centered on (x, y). Nodes are
-   * no longer uniform boxes — each one is a bespoke illustration (see
-   * pipelineGlyphs) — so size is per node rather than two shared
+   * no longer uniform boxes, since each one is a bespoke illustration
+   * (see pipelineGlyphs), so size is per node rather than two shared
    * constants. Edge trimming below derives from this too, which is what
    * keeps the line art from running underneath the artwork. */
   width: number
@@ -87,11 +87,11 @@ export function getNode(id: NodeId): DiagramNode {
 }
 
 // Context (always) and the real tradeoff reasoning (where one exists) per
-// node — this is where the actual engineering judgment lives, not in a
+// node. This is where the actual engineering judgment lives, not in a
 // separate prose block disconnected from the diagram. Nodes without a
 // documented decision only get context; not every step was a deliberate
 // choice worth defending. A Record keyed by the closed NodeId union (not
-// Record<string, ...>) makes this exhaustive — every node is guaranteed an
+// Record<string, ...>) makes this exhaustive: every node is guaranteed an
 // entry, checked by the compiler rather than by remembering to fill one in.
 export const NODE_INFO: Record<
   NodeId,
@@ -101,14 +101,14 @@ export const NODE_INFO: Record<
     /** What the payload actually looks like at this stop. This used to be
      * a live panel beside the diagram, driven by a file the visitor sent
      * through by hand. It changed state every few hundred milliseconds,
-     * which is faster than anyone can read a JSON body — so it moved
+     * which is faster than anyone can read a JSON body, so it moved
      * here, where it's read at the reader's own pace and sits next to the
      * reasoning for the same stop.
      *
      * Every value is invented. The real object keys, bucket names and
      * service names from this pipeline are not in this repository and are
      * not going into it; these are shaped like the real thing and are not
-     * it. Lines stay short — this renders as mono in a narrow column. */
+     * it. Lines stay short, since this renders as mono in a narrow column. */
     payload?: { label: string; lines: string[] }
   }
 > = {
@@ -217,11 +217,11 @@ export const NODE_INFO: Record<
 }
 
 // Overlapping bounding regions grouping nodes by role, matching the shape
-// of Blake's own Excalidraw sketch. The sketch used blue/red/green; this
+// of the original hand-drawn sketch, which used blue/red/green. This
 // stays inside the site's locked bg/ink/accent palette instead, so the
 // three are told apart by border style (solid/dashed/dotted) and label
 // text rather than by introducing new hues. Hand-fit bounding boxes, not
-// derived from NODES — unlike the edges below, a region has to wrap
+// derived from NODES. Unlike the edges below, a region has to wrap
 // several nodes plus their labels plus padding, which isn't a clean
 // offset from any single node's coordinates.
 export const REGIONS: {
@@ -281,7 +281,7 @@ interface Point {
 const EDGE_GAP = 10
 
 /** A node's label sits below its artwork, so its ink reaches further down
- * than its box does. Edges have to clear the label too — otherwise a
+ * than its box does. Edges have to clear the label too, or else a
  * vertical edge draws straight through the text, which is exactly what
  * the first pass of this layout did. */
 const LABEL_BASELINE_OFFSET = 15
@@ -298,7 +298,7 @@ function bottomExtent(node: DiagramNode): number {
 }
 
 /** Where a ray from a node's center toward `toward` crosses that node's
- * bounds. Used to trim edges back to the node boundary — the diagonal
+ * bounds. Used to trim edges back to the node boundary. The diagonal
  * parser → output / parser → DLQ edges are why this solves for the box
  * rather than just subtracting half a width. */
 function boxExit(node: DiagramNode, toward: Point): Point {
@@ -319,8 +319,8 @@ function polyline(points: Point[]): string {
 
 /** Where a token comes to rest inside a node's artwork, as an offset from
  * that node's center. Arriving somewhere should mean landing *in* the
- * thing — on the floor of the lake, in a slot of the queue, in a cell of
- * Athena's grid — rather than stopping on top of a picture of it. That's
+ * thing, on the floor of the lake, in a slot of the queue, in a cell of
+ * Athena's grid, rather than stopping on top of a picture of it. That's
  * the whole reason the nodes stopped being rectangles, and it's what the
  * per-stop particle effects used to gesture at from the outside.
  *
@@ -352,8 +352,8 @@ const NODE_SEATS: Partial<Record<NodeId, Point[]>> = {
 }
 
 /** Where the nth file in the SQS queue sits. Position is queue position,
- * not an arbitrary free slot: the front of the queue — the one Lambda
- * takes next — is nearest the exit, and everything behind it shuffles
+ * not an arbitrary free slot: the front of the queue, the one Lambda
+ * takes next, is nearest the exit, and everything behind it shuffles
  * forward when it leaves. That's the behaviour that makes it read as a
  * queue rather than as four parking spaces. Beyond the fourth, arrivals
  * share the back slot rather than spilling out of the channel. */
@@ -363,7 +363,7 @@ export function sqsQueueSeat(index: number): Point {
   return { x: 33 - 22 * Math.min(index, SQS_VISIBLE_SLOTS - 1), y: 0 }
 }
 
-/** Cells in Athena's grid — and therefore how many finished records it
+/** Cells in Athena's grid, and therefore how many finished records it
  * can hold before the oldest is dropped to make room. */
 export const ATHENA_CAPACITY = 12
 
@@ -392,7 +392,7 @@ interface Connection {
    * notification about a file, not the file moving anywhere. */
   segment?: SegmentKey
   /** Interior corners, for edges that don't run straight between two
-   * nodes. Only the redrive return needs them — it detours below the
+   * nodes. Only the redrive return needs them, since it detours below the
    * whole diagram rather than cutting back across the main row. */
   waypoints?: Point[]
   dashed?: boolean
@@ -434,10 +434,10 @@ function connectionPoints(connection: Connection) {
   const firstAfterStart = waypoints[0] ?? to
   const lastBeforeEnd = waypoints[waypoints.length - 1] ?? from
   return {
-    /** Center to center — where a token actually travels, since arriving
+    /** Center to center, where a token actually travels, since arriving
      * "at" a node means arriving at its middle. */
     full: [from, ...waypoints, to],
-    /** Trimmed to the node boundaries — what gets drawn. */
+    /** Trimmed to the node boundaries, which is what gets drawn. */
     trimmed: [
       boxExit(from, firstAfterStart),
       ...waypoints,
@@ -446,7 +446,7 @@ function connectionPoints(connection: Connection) {
   }
 }
 
-// Background line art — every edge in the diagram, drawn once and never
+// Background line art: every edge in the diagram, drawn once and never
 // animated.
 export const STATIC_EDGES: { d: string; dashed?: boolean }[] = CONNECTIONS.map(
   (connection) => ({
@@ -455,7 +455,7 @@ export const STATIC_EDGES: { d: string; dashed?: boolean }[] = CONNECTIONS.map(
   }),
 )
 
-// One path per node-to-node hop — deliberately finer-grained than the
+// One path per node-to-node hop, deliberately finer-grained than the
 // diagram's visual "legs", because a flow's arrivedAt (and every per-stop
 // effect keyed off it) only updates at a segment's end. A single
 // device-to-parser transition would never pass through an intermediate
@@ -464,7 +464,7 @@ export const STATIC_EDGES: { d: string; dashed?: boolean }[] = CONNECTIONS.map(
  *
  * Every hop used to take the same 450ms whatever its length, so a file
  * crossed a 243px diagonal half again as fast as a 148px straight, and the
- * redrive return covered 736px in the same time — about 1600px a second,
+ * redrive return covered 736px in the same time, about 1600px a second,
  * which is not travel, it's a cut. A single speed makes the pipeline read
  * as one continuous thing a file moves through at a steady pace. */
 const TRAVEL_SPEED_PX_PER_SECOND = 200
@@ -507,7 +507,7 @@ function segmentPath(key: SegmentKey): string {
 }
 
 // Spelled out key by key rather than reduced from CONNECTIONS, so the
-// compiler checks that every SegmentKey actually has a path — a filtered
+// compiler checks that every SegmentKey actually has a path. A filtered
 // reduce would need a cast, and a missing segment would then surface as a
 // token that silently never moves.
 export const SEGMENTS: Record<SegmentKey, string> = {

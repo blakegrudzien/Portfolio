@@ -40,7 +40,6 @@ export function HomePage() {
         startups, focusing on backend and data engineering.
       </p>
 
-
       <p className={styles.work}>
         Written up in full:{' '}
         <Link to={paths.projectChessScholar}>Chess Scholar</Link> ·{' '}

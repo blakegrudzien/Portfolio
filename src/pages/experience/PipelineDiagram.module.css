@@ -75,7 +75,7 @@
   transition: stroke var(--motion-duration-base) var(--motion-ease);
 }
 
-/* One weight and one color for every node's artwork — eleven hand-drawn
+/* One weight and one color for every node's artwork. Eleven hand-drawn
    shapes only read as a set if they're drawn with the same pen. Set on
    the wrapping <g> rather than per path so a state change below can
    restyle an entire node with a single selector. */
@@ -89,7 +89,7 @@
 }
 
 /* Logos are reproduced at their own weight rather than redrawn at the
-   diagram's — a mark everyone recognizes looks broken, not stylish, when
+   diagram's. A mark everyone recognizes looks broken, not stylish, when
    it's traced in the house hairline. */
 .glyphLogo {
   fill: none;
@@ -113,7 +113,7 @@
   stroke: none;
 }
 
-/* Labels sit under the artwork rather than inside it — there's no box to
+/* Labels sit under the artwork rather than inside it, since there's no box to
    put them in anymore, and an illustration is easier to read without
    type laid over it. */
 .nodeLabel {
@@ -124,7 +124,7 @@
 }
 
 /* Hover/focus reveal. This used to be ink, because accent was reserved
-   for "the file you sent is here" — and with that gone, accent is free and
+   for "the file you sent is here". With that gone, accent is free and
    inspection is the only state a node has. It's also the diagram's one
    piece of colour now, which is what makes the affordance findable.
    Accent on the page background is 5.60:1. */
@@ -147,7 +147,7 @@
 }
 
 /* Element opacity is driven imperatively as a token starts moving, so the
-   muted look of background traffic rides on fill-opacity instead — the two
+   muted look of background traffic rides on fill-opacity instead, so the two
    don't fight that way. Fill is set on the group and inherited, so every
    state below restyles the readings and the file together. */
 .token {
@@ -195,7 +195,7 @@
 
 /* Marks and the notch are cut out of the file in page background, so they
    read as features of the thing rather than ink laid on top of it. Opaque
-   even on ambient traffic, which is otherwise half-transparent — a
+   even on ambient traffic, which is otherwise half-transparent. A
    half-transparent hole isn't a hole. */
 .tokenMarks rect,
 .tokenNotch {
@@ -260,7 +260,7 @@
   color: var(--color-ink);
 }
 
-/* Slack's unread badge, in Slack's own red — see pipelineGlyphs for why
+/* Slack's unread badge, in Slack's own red. See pipelineGlyphs for why
    those four brand hues live outside tokens.css. The ring around it is the
    page background rather than a border color, so the badge reads as
    sitting on top of the mark instead of being part of it. */

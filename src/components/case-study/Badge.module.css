@@ -10,7 +10,7 @@
   border: 1px solid currentColor;
 }
 
-/* kind drives color only — the label text itself already says which kind
+/* kind drives color only. The label text itself already says which kind
    it is, so color here is a reinforcing cue, not the only signal. */
 .project {
   color: var(--color-accent);

@@ -11,10 +11,10 @@ export interface SequenceStep {
 
 export const DEFAULT_PAUSE_MS = 150
 
-// Pauses split the pipeline into two kinds of stop. Transforming stops —
-// the condenser, Kinesis, Lambda, the parser — do something to the file
+// Pauses split the pipeline into two kinds of stop. Transforming stops
+// (the condenser, Kinesis, Lambda, the parser) do something to the file
 // and hand it straight on, so they hold it only long enough for that to
-// register. Holding stops — the lake and the queue — are where a file
+// register. Holding stops (the lake and the queue) are where a file
 // actually waits in the real system, and they're what makes the diagram
 // look like it has depth rather than a conveyor belt.
 //
@@ -48,8 +48,8 @@ export const REDRIVE_SEQUENCE: SequenceStep[] = [
 export type Trigger = 'success' | 'failure' | 'redrive'
 
 /** How often background traffic fails to parse. Still well above a real
- * pipeline's rate — a visitor has to see the DLQ actually accumulate
- * rather than take the failure story on faith — but below the 0.2 it was
+ * pipeline's rate, since a visitor has to see the DLQ actually accumulate
+ * rather than take the failure story on faith, but below the 0.2 it was
  * before throughput went up roughly fourfold, which would now bury the
  * diagram in failures inside a minute.
  *
@@ -59,7 +59,7 @@ export type Trigger = 'success' | 'failure' | 'redrive'
  * roll. */
 export const AMBIENT_FAILURE_RATE = 0.15
 
-/** A device emits several discrete readings, not one file — the file is
+/** A device emits several discrete readings, not one file. The file is
  * something the condenser makes. These are the offsets those readings ride
  * at until they merge, laid out on a jittered ring so a cluster reads as
  * several separate things rather than as one fuzzy blob.
@@ -85,7 +85,7 @@ export function createDotOffsets(
  * way through and both changes are load-bearing:
  *
  * - `events`   several separate device readings, before anything batches them
- * - `file`     one batched file — and later, the same file reopened and read
+ * - `file`     one batched file, and later the same file reopened and read
  * - `gzipped`  what Firehose writes to the lake, and all SQS ever refers to
  * - `parquet`  columnar, after the parser's output is converted
  *
@@ -100,7 +100,7 @@ export function payloadStage(arrivedAt: NodeId | null): PayloadStage {
     case 'device':
       return 'events'
     // Compressed from the moment Firehose writes it, and still compressed
-    // in the queue — SQS only ever carries the bucket and key, so nothing
+    // in the queue. SQS only ever carries the bucket and key, so nothing
     // between here and Lambda has looked inside the file.
     case 'kinesis':
     case 's3lake':
@@ -128,7 +128,7 @@ export interface FlowLeg {
 }
 
 // The whole "what happens when" state machine, as data rather than as
-// branching imperative code — this is what makes it directly testable
+// branching imperative code. This is what makes it directly testable
 // without touching the DOM or a timer. Each trigger is an ordered list of
 // legs; the phase updates once per leg, not once per segment, since that's
 // the granularity a visitor (or a screen reader via the status text)
@@ -143,7 +143,7 @@ const FLOWS: Record<Trigger, FlowLeg[]> = {
     { phase: 'traveling-failure', sequence: FAILURE_SEQUENCE },
   ],
   // The success leg here reuses SUCCESS_SEQUENCE (a redrive that reaches
-  // the parser always succeeds — see usePipelineAnimation) and is
+  // the parser always succeeds, see usePipelineAnimation) and is
   // announced as its own 'traveling-success' phase rather than staying on
   // 'traveling-redrive' for the whole trip, so the aria-live status text
   // (and the payload preview) still flips to "writing to output" instead
@@ -169,7 +169,7 @@ export function getFinalPhase(trigger: Trigger): Phase {
 }
 
 /** Runs one segment of travel. Supplied by the caller (usePipelineAnimation,
- * in practice) since actually moving the token is a DOM/CSS concern —
+ * in practice) since actually moving the token is a DOM/CSS concern.
  * runSequence and runFlowLegs below only care about ordering and timing,
  * so they stay testable without a real animation to wait on. */
 export type StepRunner = (

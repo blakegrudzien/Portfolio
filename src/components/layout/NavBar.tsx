@@ -16,8 +16,8 @@ import styles from './NavBar.module.css'
 const navItems: { to: string; label: string; end?: boolean }[] = [
   // `end`, or "/" would match every route and Home would always look active.
   { to: paths.home, label: 'Home', end: true },
-  { to: paths.projects, label: 'Projects' },
   { to: paths.experience, label: 'Experience' },
+  { to: paths.projects, label: 'Projects' },
   { to: paths.resume, label: 'Resume' },
 ]
 

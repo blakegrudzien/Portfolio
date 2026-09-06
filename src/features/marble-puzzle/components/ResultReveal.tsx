@@ -10,8 +10,8 @@ interface ResultRevealProps {
 }
 
 const headline: Record<GuessOutcome, string> = {
-  'correct-deduced': 'Correct — and fully deduced.',
-  'correct-lucky': 'Correct — but that was a bit of a guess.',
+  'correct-deduced': 'Correct, and fully deduced.',
+  'correct-lucky': 'Correct, but that was a bit of a guess.',
   incorrect: 'Not quite.',
 }
 
@@ -21,7 +21,7 @@ export function ResultReveal({
   weighingsUsed,
   onRestart,
 }: ResultRevealProps) {
-  const solutionText = `Marble ${solution.oddMarbleId + 1} was the odd one out — ${solution.oddWeight}.`
+  const solutionText = `Marble ${solution.oddMarbleId + 1} was the odd one out, ${solution.oddWeight}.`
 
   const body =
     finalAnswer.outcome === 'correct-deduced'

@@ -6,7 +6,7 @@ interface RouteHandle {
 }
 
 /** Sets document.title from the current route's `handle.title` (set per
- * route in routeConfig.tsx). A plain hook rather than react-helmet-async —
+ * route in routeConfig.tsx). A plain hook rather than react-helmet-async,
  * this project only ever needs a single tag, on the client, once per
  * navigation, which doesn't justify a whole meta-tag management library. */
 export function useDocumentTitle() {

@@ -15,7 +15,7 @@ import {
 /** What a balance scale would show if `oddMarbleId` were the odd one out
  * in direction `oddDirection`, for the given pan contents. A weighing's
  * real outcome and a hypothesis's simulated outcome are the same
- * computation — a hypothesis is just a candidate solution. */
+ * computation. A hypothesis is just a candidate solution. */
 function simulateOutcome(
   pans: PanAssignment,
   oddMarbleId: MarbleId,
@@ -38,7 +38,7 @@ export function createInitialPossibilitySpace(): PossibilitySpace {
 }
 
 /** Drops any (marble, direction) hypothesis that wouldn't have produced
- * the weighing's actual outcome — a general constraint filter, not a
+ * the weighing's actual outcome. A general constraint filter, not a
  * hand-coded strategy, so it works for any weighing in any order. */
 export function narrowPossibilitySpace(
   space: PossibilitySpace,

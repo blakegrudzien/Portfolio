@@ -94,7 +94,7 @@ samp {
   font-family: var(--font-mono);
 }
 
-/* Focus — accent ring, verified 5.60:1 against --color-bg (passes the 3:1
+/* Focus: accent ring, verified 5.60:1 against --color-bg (passes the 3:1
    non-text UI minimum with room to spare). Global so no component has to
    remember to add its own. */
 :focus-visible {
@@ -103,7 +103,7 @@ samp {
   border-radius: var(--radius-sm);
 }
 
-/* Reduced motion — sitewide safety net. Components should also read the
+/* Reduced motion: a sitewide safety net. Components should also read the
    --motion-duration-* tokens directly, but this guarantees nothing
    animates regardless of whether a given component remembered to. */
 @media (prefers-reduced-motion: reduce) {
@@ -118,7 +118,7 @@ samp {
 }
 
 /* Visually hidden but still available to screen readers and keyboard
-   focus — the standard sr-only pattern (used by e.g. the skip link). */
+   focus, the standard sr-only pattern (used by e.g. the skip link). */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -131,7 +131,7 @@ samp {
   border: 0;
 }
 
-/* Prose — shared body-copy typography for case-study sections. */
+/* Prose: shared body-copy typography for case-study sections. */
 .prose {
   max-width: 68ch;
   font-size: var(--text-base);

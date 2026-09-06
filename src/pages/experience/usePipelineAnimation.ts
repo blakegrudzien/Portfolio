@@ -23,21 +23,21 @@ import {
 /** One piece of telemetry making its way through the pipeline. Ambient
  * flows are background traffic the pipeline generates on its own; the
  * one whose journey drives the status text and payload panel. Both kinds
- * run through exactly the same engine — "highlighted" is presentation, not
+ * run through exactly the same engine. "highlighted" is presentation, not
  * a separate mechanism. */
 export interface FlowInstance {
   id: string
   phase: Phase
-  /** The node this flow most recently arrived at — what each per-node
+  /** The node this flow most recently arrived at, and what each per-node
    * effect keys off. Tracked per flow, so several tokens passing different
    * stops at once each trigger their own effect. */
   arrivedAt: NodeId | null
   /** The separate device readings this flow started life as, as offsets
    * from the token's own position. They converge into one file at the
-   * condenser and are never used again — but they're fixed per flow, so
+   * condenser and are never used again, but they're fixed per flow, so
    * a re-render can't reshuffle a cluster mid-flight. */
   dots: { x: number; y: number }[]
-  /** Whether this file will fail to parse — decided at spawn, because
+  /** Whether this file will fail to parse, decided at spawn because
    * the defect is in the bytes the device emitted, not in something that
    * happens to it later. Drives the visual cue the token carries, and
    * survives a redrive: the parser gets fixed, the file doesn't. */
@@ -78,7 +78,7 @@ function dlqClusterOffset(slot: number) {
   const col = slot % 4
   const row = Math.floor(slot / 4) % 3
   // Rows land on the centers of the bin's three compartments rather than
-  // on the lines dividing them, and fill from the bottom up — a backlog
+  // on the lines dividing them, and fill from the bottom up. A backlog
   // piles up, it doesn't hang from the ceiling.
   return { dx: (col - 1.5) * 13, dy: 16 - row * 16 }
 }
@@ -94,7 +94,7 @@ interface StaticSpot {
  * Someone who asks for less motion used to get an empty picture: background
  * traffic is suppressed for them, and with the visitor's own file gone
  * there would be nothing left to draw at all. So they get files at rest
- * instead — objects in the lake, references waiting in the queue, a backlog
+ * instead: objects in the lake, references waiting in the queue, a backlog
  * in the DLQ, records in the grid. The same information the moving version
  * carries, none of the movement. The redrive still works from here.
  */
@@ -152,14 +152,14 @@ export function usePipelineAnimation() {
     initialSceneRef.current.map(({ flow }) => flow),
   )
 
-  // One DOM node per flow, addressed by id — travel is animated
+  // One DOM node per flow, addressed by id. Travel is animated
   // imperatively (see runSegment), so it needs the element, not a re-render.
   const tokenElsRef = useRef(new Map<string, SVGGElement>())
   const mountedRef = useRef(true)
   const idCounterRef = useRef(0)
   const dlqSlotCounterRef = useRef(0)
   // Finished records, oldest first. Athena's grid holds a working set
-  // rather than everything ever written, so this is bounded — but a record
+  // rather than everything ever written, so this is bounded, but a record
   // stays visible long after its own journey ended, which is the point:
   // the grid filling up is the only evidence on screen that the pipeline
   // has been doing anything for the last few minutes.
@@ -180,7 +180,7 @@ export function usePipelineAnimation() {
 
   useEffect(() => {
     // StrictMode's dev-only mount -> cleanup -> mount again means the
-    // cleanup below can run once before settling — re-arm on setup too, or
+    // cleanup below can run once before settling, so re-arm on setup too, or
     // that first (non-final) cleanup would permanently wedge this false.
     mountedRef.current = true
     return () => {
@@ -231,7 +231,7 @@ export function usePipelineAnimation() {
 
   /** Rotates through a node's seats so two tokens stopped at the same
    * stop don't land on top of each other. Deliberately not real occupancy
-   * tracking — a wrong guess here costs a slight overlap, and the
+   * tracking: a wrong guess here costs a slight overlap, and the
    * bookkeeping to do better would outweigh that. */
   function nextSeatSlot(nodeId: NodeId) {
     const next = (seatCountersRef.current.get(nodeId) ?? 0) + 1
@@ -266,7 +266,7 @@ export function usePipelineAnimation() {
     }
 
     // setProperty rather than camelCase assignment (el.style.offsetPath = ...)
-    // — offset-path/offset-distance aren't reliably exposed as named
+    // because offset-path/offset-distance aren't reliably exposed as named
     // CSSStyleDeclaration accessors even where the CSS property itself is
     // supported, so the camelCase form can silently no-op.
     const durationMs = SEGMENT_DURATIONS_MS[segment]
@@ -276,8 +276,8 @@ export function usePipelineAnimation() {
     el.style.setProperty('offset-distance', '0%')
     el.style.setProperty('opacity', '1')
     // Deliberately *not* clearing `translate` here. It holds the offset
-    // that seated this file inside the last node's artwork — in a queue
-    // slot, on the floor of the lake — and offset-distance 0% is that
+    // that seated this file inside the last node's artwork, in a queue
+    // slot or on the floor of the lake, and offset-distance 0% is that
     // node's centre, so leaving it alone keeps the file exactly where it
     // visibly is. Zeroing it first, which is what this used to do, made
     // every departure begin with an instant jump of up to ~37px. That
@@ -323,14 +323,14 @@ export function usePipelineAnimation() {
   }
 
   // The pause between segments (runFlowLegs/runSequence's `schedule`
-  // parameter) is a plain setTimeout, not a CSS transition/animation — so
+  // parameter) is a plain setTimeout, not a CSS transition/animation, so
   // unlike everything else driving this diagram, it does NOT automatically
   // collapse under prefers-reduced-motion via the global base.css override.
   // Left alone, a reduced-motion visitor would still sit through several
   // real seconds of pauses even though every visual transition had gone
   // instant, which defeats the point. Checked per call rather than cached
   // once, since matchMedia's result can change mid-session if the OS
-  // setting does. The state progression itself is unaffected — every stop
+  // setting does. The state progression itself is unaffected: every stop
   // is still visited and every phase still announced, just without the
   // multi-second forced wait between them.
   function schedule(callback: () => void, delayMs: number) {
@@ -352,7 +352,7 @@ export function usePipelineAnimation() {
         const finalPhase = getFinalPhase(trigger)
         if (finalPhase === 'done-success') parkAtAthena(id)
         if (finalPhase === 'in-dlq') {
-          // Park it in the DLQ cluster, where it stays — visibly — until a
+          // Park it in the DLQ cluster, where it stays, visibly, until a
           // redrive sweeps the whole backlog.
           const { dx, dy } = dlqClusterOffset(dlqSlotCounterRef.current++)
           tokenElsRef.current
@@ -368,7 +368,7 @@ export function usePipelineAnimation() {
 
   /** Parks a file at a stop with no journey and no animation. The token
    * groups sit directly in the SVG's own coordinate space, so placing one
-   * is a plain translate to absolute coordinates — no offset-path, which
+   * is a plain translate to absolute coordinates, with no offset-path, which
    * is the part that would need a path to travel along. */
   function placeStatically(
     id: string,
@@ -387,7 +387,7 @@ export function usePipelineAnimation() {
   // Placement has to wait for React to render the elements, exactly as a
   // spawned flow's first segment does.
   // Placement waits for React to have rendered the elements, exactly as a
-  // spawned flow's first segment does. Runs once — it only ever has
+  // spawned flow's first segment does. Runs once, since it only ever has
   // anything to do on the first commit.
   useEffect(() => {
     for (const { spot, flow } of initialSceneRef.current) {
@@ -435,7 +435,7 @@ export function usePipelineAnimation() {
   function spawnFlowOnSchedule(forcedOutcome?: 'success' | 'failure') {
     // Someone who asked for less motion shouldn't get perpetual background
     // traffic they never opted into. Their own telemetry still runs when
-    // they click for it — that one is a deliberate action, not ambience.
+    // they click for it, and that one is a deliberate action, not ambience.
     if (prefersReducedMotion()) return
     if (travelingRef.current >= MAX_TRAVELING) return
     const id = `flow-${idCounterRef.current++}`
@@ -454,7 +454,7 @@ export function usePipelineAnimation() {
       () => {
         // Either way it has stopped traveling, so it frees a slot: a failed
         // flow now sits parked in the DLQ, a successful one in Athena's
-        // grid. Neither is deleted here — both are still on screen, and
+        // grid. Neither is deleted here: both are still on screen, and
         // both are somebody else's job to clear (a redrive, or the grid
         // filling up).
         travelingRef.current -= 1
@@ -492,8 +492,8 @@ export function usePipelineAnimation() {
     // supposed to look like it's running. The jittered spawn interval
     // fans them out within a stop or two, so it isn't a starting gun.
     // One of these is a guaranteed failure. At the steady-state rate the
-    // first one is a die roll — measured runs have taken anywhere from
-    // ten seconds to over a minute — and until it lands there is no
+    // first one is a die roll, and measured runs have taken anywhere from
+    // ten seconds to over a minute. Until it lands there is no
     // backlog, no Slack badge and nothing for the Redrive button to do,
     // so the entire failure pathway is invisible for an unbounded stretch
     // of a visit. That's too much of the diagram's argument to leave to
@@ -511,14 +511,14 @@ export function usePipelineAnimation() {
       cancelled = true
       window.clearTimeout(timeoutId)
     }
-    // Runs once for the component's lifetime — everything it touches is a
+    // Runs once for the component's lifetime, since everything it touches is a
     // ref, so it never needs rebuilding as flows come and go.
   }, [])
 
   // --- the visitor's own telemetry ----------------------------------------
 
   // The one thing a visitor sets off. It clears the whole backlog, not one
-  // file — that's what redriving a queue actually does — and the files go
+  // file, which is what redriving a queue actually does, and the files go
   // back unchanged: what got fixed is the parser.
   function redrive() {
     const held = flows.filter((flow) => flow.phase === 'in-dlq')
@@ -531,7 +531,7 @@ export function usePipelineAnimation() {
     }
   }
 
-  // Every file in the DLQ, not just the visitor's own — the Slack badge is
+  // Every file in the DLQ, not just the visitor's own. The Slack badge is
   // reporting on the queue, and the firmware team's digest counts whatever
   // is actually sitting in it.
   const dlqCount = flows.filter((flow) => flow.phase === 'in-dlq').length

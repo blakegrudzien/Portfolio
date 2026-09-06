@@ -42,7 +42,7 @@ const architectureLayers = [
     title: 'Structural similarity: opening matching',
     children: (
       <p>
-        Opening-move-prefix matching against the game database. Strictly matches 
+        Opening-move-prefix matching against the game database. Strictly matches
         to games with the same opening sequence, not similar positions.
       </p>
     ),
@@ -54,8 +54,8 @@ const architectureLayers = [
       <p>
         A separate agent filters scraped Lichess studies through a
         gradient-boosted classifier (0.887 cross-validated ROC-AUC trained on
-        hand-labeled examples) before surfacing them. Studies that pass the check
-        are chosen based on positional relevance to the user's question.
+        hand-labeled examples) before surfacing them. Studies that pass the
+        check are chosen based on positional relevance to the user's question.
       </p>
     ),
   },
@@ -81,29 +81,30 @@ export function ChessScholarPage() {
     >
       <CaseStudySection heading="The problem">
         <p>
-          Chess engines surpassed human players decades ago, however they don't
-          understand chess in the same way humans do. Attempts at AI coaching
-          generally fall flat because they have to reverse engineer a human
-          readable explanation for a decision made without those ideas in mind.
-          Chess Scholar bypasses this problem by training a model on high level
-          annotations. This way, the AI never tries to understand the game on
-          its own and instead supplies the user with relevant human commentary
-          to explain the reasoning behind a move.
+          Chess engines surpassed human players decades ago, but they don't
+          understand chess the way humans do. Attempts at AI coaching generally
+          fall flat because they have to reverse engineer a human-readable
+          explanation for a decision made without those ideas in mind. Chess
+          Scholar bypasses this by training a model on high-level annotations.
+          This way, the AI never tries to understand the game on its own and
+          instead supplies the user with relevant human commentary to explain
+          the reasoning behind a move.
         </p>
       </CaseStudySection>
 
       <CaseStudySection heading="Architecture">
         <p>
-          Four different backend dat sources, each specialized for a different type of
-          question: SQL for aggregated statistics, vector RAG for annotated commentary,
-          Stockfish for engine evaluation, and structural similarity for matching user 
-          games to games in the database. Claude uses its own native tool-calling to choose
-          which combination of layers will best answer the user's question.
-          After the response, the recommendation layer filters Lichess studies
-          and grandmaster games to suggest relevant further study material.
-          Lichess studies are scraped and filtered through a gradient-boosted
-          classifier so only high quality studies are suggested. Grandmaster
-          games are picked based on positional relevance.
+          Four different backend data sources, each specialized for a different
+          type of question: SQL for aggregated statistics, vector RAG for
+          annotated commentary, Stockfish for engine evaluation, and structural
+          similarity for matching user games to games in the database. Claude
+          uses its own native tool-calling to choose which combination of layers
+          will best answer the user's question. After the response, the
+          recommendation layer filters Lichess studies and grandmaster games to
+          suggest relevant further study material. Lichess studies are scraped
+          and filtered through a gradient-boosted classifier so only
+          high-quality studies are suggested. Grandmaster games are picked based
+          on positional relevance.
         </p>
         <ExpandablePanelList panels={architectureLayers} defaultOpenId="sql" />
       </CaseStudySection>
@@ -117,14 +118,13 @@ export function ChessScholarPage() {
         </p>
         <p>
           The similarity layer matches opening move sequences, not positional
-          understanding, which can still diverge drastically after the match. 
-          The study recommender's classifier scored 0.887 cross-validated ROC-AUC, 
-          but it was trained 184 hand labeled examples, so that number reflects one 
-          person's judgment of what makes a high quality study.
+          understanding, which can still diverge drastically after the match.
+          The study recommender's classifier scored 0.887 cross-validated
+          ROC-AUC, but it was trained on 184 hand-labeled examples, so that
+          number reflects one person's judgment of what makes a high-quality
+          study.
         </p>
-        <p>
-          The UI currently only has desktop in mind, mobile integration will come later.
-        </p>
+        <p>The UI is built for desktop only.</p>
       </CaseStudySection>
 
       <CaseStudySection heading="Tech stack">
@@ -132,7 +132,6 @@ export function ChessScholarPage() {
           Python · Claude Sonnet 5 (native tool calling) · Voyage AI voyage-4
           embeddings · Postgres + pgvector (Neon) · Stockfish via python-chess
           (UCI) · Streamlit with a custom draggable board (wraps chessboard.js)
-          
         </p>
       </CaseStudySection>
 

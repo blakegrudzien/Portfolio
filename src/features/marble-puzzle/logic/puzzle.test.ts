@@ -166,7 +166,7 @@ describe('submitFinalAnswer', () => {
   const solution: PuzzleSolution = { oddMarbleId: 5, oddWeight: 'heavier' }
 
   it('marks a correct guess as correct-lucky when multiple hypotheses remain', () => {
-    // No weighings done — all 24 hypotheses are still open.
+    // No weighings done, so all 24 hypotheses are still open.
     const result = submitFinalAnswer(buildState(solution), 5, 'heavier')
     expect(result.finalAnswer?.outcome).toBe('correct-lucky')
   })
@@ -188,7 +188,7 @@ describe('submitFinalAnswer', () => {
 })
 
 describe('a full three-weighing game', () => {
-  // Hand-verified for this specific hidden solution (marble 5, heavier) —
+  // Hand-verified for this specific hidden solution (marble 5, heavier).
   // not the globally optimal strategy, just one concrete, checked path
   // that exercises narrowing across three real weighings end to end.
   it('collapses the possibility space to exactly the true odd marble', () => {

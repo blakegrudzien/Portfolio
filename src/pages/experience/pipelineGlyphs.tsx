@@ -2,7 +2,7 @@ import styles from './PipelineDiagram.module.css'
 import type { NodeId } from './pipelineData'
 
 // The node artwork. Each glyph draws in its own coordinate space centered
-// on (0, 0) — the parent <g> places it — so a node can be moved in NODES
+// on (0, 0), since the parent <g> places it, so a node can be moved in NODES
 // without any of its geometry needing to be rewritten.
 //
 // These replace the eleven identical rounded rectangles the diagram used
@@ -22,7 +22,7 @@ import type { NodeId } from './pipelineData'
 //
 // Three nodes break that on purpose and say why where they're drawn: the
 // parser's black box, and the Lambda and Slack logos. The rule those two
-// follow is that a *logo* is reproduced, not redrawn — an approximation of
+// follow is that a *logo* is reproduced, not redrawn. An approximation of
 // a mark everyone recognizes reads as a mistake, not as a house style.
 
 function Device({ eventKey }: { eventKey?: string }) {
@@ -35,8 +35,8 @@ function Device({ eventKey }: { eventKey?: string }) {
       <path d="M -56,-18 L -56,20" />
       {/* Keyed, so React remounts it on every emission and its one-shot
           animation replays. The bolt drawing back and throwing again is
-          about the quietest "that device just did something" available —
-          it's a 5px move on a line that's already there, in the corner of
+          about the quietest "that device just did something" available:
+          a 5px move on a line that's already there, in the corner of
           the diagram that fires most often. */}
       <path key={eventKey} className={styles.deviceEvent} d="M -46,1 L -56,1" />
       <rect x={-46} y={-16} width={28} height={34} rx={7} />
@@ -57,7 +57,7 @@ function Condenser() {
     <>
       {/* A press: two platens with the travel path running between them.
           Compression is the one thing this stop does, and it's also one of
-          only two nodes where the number of tokens changes — so the form
+          only two nodes where the number of tokens changes, so the form
           needs to make room for that, literally. */}
       <path d="M -40,-24 L -40,24" />
       <path d="M 40,-24 L 40,24" />
@@ -73,7 +73,7 @@ function Kinesis() {
       {/* A nozzle that takes telemetry in at the top and delivers it out
           to the right, narrowing as it goes. Narrowing does the work of
           explaining gzip without an icon, and it costs no motion at all.
-          A spray effect would have been wrong anyway — Firehose is
+          A spray effect would have been wrong anyway. Firehose is
           buffered delivery, not spraying. */}
       <path d="M -14,-30 C -14,-4 -6,8 14,8 L 50,8" />
       <path d="M 14,-30 C 14,-18 20,-8 32,-8 L 50,-8" />
@@ -85,8 +85,8 @@ function S3Lake() {
   return (
     <>
       {/* An open basin, not a box. This is the only stop that keeps what
-          it's given permanently — the DLQ drains and Athena's grid is a
-          working set, but files really do stay in the lake — so it is
+          it's given permanently. The DLQ drains and Athena's grid is a
+          working set, but files really do stay in the lake, so it is
           drawn as something with a floor that fills up. */}
       <path d="M -56,-20 L -44,-20" />
       <path d="M 44,-20 L 56,-20" />
@@ -100,7 +100,7 @@ function Sqs() {
     <>
       {/* A channel with slot dividers, open at both ends: a queue holds
           discrete messages and hands them on in order. Sized for a small
-          number of slots on purpose — with the pipeline's real arrival
+          number of slots on purpose: with the pipeline's real arrival
           rate, drawing five permanently-full slots would be fiction. */}
       <path d="M -46,-14 L 46,-14" />
       <path d="M -46,14 L 46,14" />
@@ -116,7 +116,7 @@ function Sqs() {
 
 function Lambda() {
   // The AWS Lambda lambda. A drawn form here would have to invent a
-  // silhouette for "a function runs" — there isn't an honest one, and the
+  // silhouette for "a function runs", and there isn't an honest one. The
   // mark is instantly recognized by exactly the people this page is for.
   // Sits left of centre to leave the file somewhere to be: dead-centre it
   // put an accent token on an accent mark and the two became one blob.
@@ -162,7 +162,7 @@ function Parser() {
 function Output() {
   return (
     <>
-      {/* Another bucket, because that's honestly what it is — but marked
+      {/* Another bucket, because that's honestly what it is, but marked
           with vertical stripes, since what lands here is columnar. The
           stripes are also what keeps it from reading as a second data
           lake. */}
@@ -209,7 +209,7 @@ function Dlq() {
 function Slack() {
   // The official Slack mark, in Slack's own colors. Its four brand hues
   // are the only colors in this project that aren't derived from the
-  // three design tokens — they're deliberately declared here, next to the
+  // three design tokens. They're deliberately declared here, next to the
   // artwork, rather than in tokens.css: they belong to somebody else's
   // brand and are not part of this site's palette. Drawn from the real
   // eight-path geometry (a 122.8-unit square) rather than approximated,

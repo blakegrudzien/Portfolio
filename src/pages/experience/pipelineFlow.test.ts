@@ -45,7 +45,7 @@ describe('getFlow', () => {
   it('routes a redrive through the redrive sequence, then re-announces traveling-success for the trip back through the success sequence', () => {
     // The redrive's second leg reuses SUCCESS_SEQUENCE but must switch the
     // announced phase to 'traveling-success' rather than leaving it on
-    // 'traveling-redrive' — otherwise the aria-live status text and the
+    // 'traveling-redrive', or else the aria-live status text and the
     // telemetry preview panel go stale for the whole back half of the trip.
     const legs = getFlow('redrive')
     expect(legs).toEqual([
@@ -182,7 +182,7 @@ describe('payloadStage', () => {
   })
 
   it('stays compressed from Firehose until Lambda opens it', () => {
-    // The span nothing can see inside — which is exactly why no stop in it
+    // The span nothing can see inside, which is exactly why no stop in it
     // can catch a malformed file, and why the DLQ has to exist.
     expect(payloadStage('kinesis')).toBe('gzipped')
     expect(payloadStage('s3lake')).toBe('gzipped')

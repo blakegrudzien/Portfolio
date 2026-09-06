@@ -34,7 +34,7 @@
   flex-wrap: wrap;
 }
 
-/* Nav items don't rely on the accent color alone to signal state — hover
+/* Nav items don't rely on the accent color alone to signal state. Hover
    and active both add a border, not just a color change. */
 .link {
   font-family: var(--font-mono);
