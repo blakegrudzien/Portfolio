@@ -6,19 +6,13 @@ export function Footer() {
       <div className={styles.inner}>
         {/* Contact lives here rather than only on the resume page: a
         recruiter shouldn't have to navigate anywhere to find an email
-        address, and this is the one element on every page. */}
+        address, and this is the one element on every page. GitHub is
+        deliberately not here. Opening someone's source is a decision
+        you've already made by the time you go looking, so it sits on the
+        resume page instead of following you around the site. */}
         <ul className={styles.contact}>
           <li>
             <a href="mailto:blakegrudzien@gmail.com">blakegrudzien@gmail.com</a>
-          </li>
-          <li>
-            <a
-              href="https://github.com/blakegrudzien"
-              target="_blank"
-              rel="noreferrer"
-            >
-              GitHub
-            </a>
           </li>
         </ul>
         <p className={styles.meta}>

@@ -219,12 +219,23 @@ export function PipelineDiagram() {
               // narrows while staying as tall has been compressed.
               const width = stage === 'gzipped' ? openWidth * 0.55 : openWidth
               const eventSize = 4.8
-              // Compression genuinely hides the defect — which is the
-              // whole reason nothing upstream of the parser can catch it
-              // and the DLQ has to exist. The flaw shows on the readings,
-              // vanishes once the file is gzipped, and is back the moment
-              // Lambda opens it up again.
-              const defectVisible = flow.malformed && stage !== 'gzipped'
+              // The mark means "the parser can't read this", so it's shown
+              // for exactly as long as that's true.
+              //
+              // Compression genuinely hides it, which is the whole reason
+              // nothing upstream of the parser can catch it and the DLQ has
+              // to exist: it shows on the readings, vanishes once the file
+              // is gzipped, and is back the moment Lambda opens it up.
+              //
+              // It also clears at Parquet. A redriven file still carries
+              // the same bytes that failed the first time, but by the time
+              // it's columnar output the parser has been fixed and has read
+              // it, so the file is no longer unreadable and the grid
+              // shouldn't keep flagging it. That the mark survives the DLQ
+              // and disappears on the way out of the parser is the point:
+              // what got fixed was the parser, not the file.
+              const defectVisible =
+                flow.malformed && stage !== 'gzipped' && stage !== 'parquet'
               const inset = 1.6
               return (
                 <g

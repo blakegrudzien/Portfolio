@@ -6,9 +6,8 @@ export function LevelHomePage() {
   return (
     <CaseStudyShell
       kind="experience"
-      // TODO: fill in the actual dates, e.g. "Summer 2025 · in-person
-      // internship". Left off rather than guessed at.
       title="Level Home"
+      dates="May 2025 – September 2025"
       tags={['Go', 'AWS', 'Kinesis Firehose', 'Parquet']}
     >
       <CaseStudySection heading="The problem">
@@ -36,6 +35,24 @@ export function LevelHomePage() {
 
       <CaseStudySection heading="Architecture" prose={false}>
         <PipelineDiagram />
+      </CaseStudySection>
+
+      <CaseStudySection heading="Tests & CI">
+        <p>
+          Every pull request ran the Go test suite with coverage, golangci-lint,
+          and govulncheck, plus a container image build to confirm the Lambda
+          image still compiled. The deploy pipeline around that belonged to
+          another team.
+        </p>
+        <p>
+          What I added was the part that made a failing run readable. A
+          coverage-diff step compared the branch against main and commented on
+          the pull request with the delta and any new files that came in under
+          the threshold, so a change that quietly dropped coverage got named
+          before review instead of after. A second step read a failed run and
+          posted the actual reason as a comment, rather than leaving whoever
+          opened the pull request to go find it in the log.
+        </p>
       </CaseStudySection>
 
       <CaseStudySection heading="Tech stack">

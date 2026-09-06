@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router'
 import { SiteShell } from '../components/layout/SiteShell'
-import { AboutPage } from '../pages/about/AboutPage'
 import { LevelHomePage } from '../pages/experience/LevelHomePage'
 import { HomePage } from '../pages/home/HomePage'
 import { LabPage } from '../pages/lab/LabPage'
@@ -20,6 +19,10 @@ export const router = createBrowserRouter([
         element: <HomePage />,
         handle: { title: 'Blake Grudzien' },
       },
+      // TODO: /projects needs a full refactor. Right now it direct-renders
+      // the single case study, which reads as "this is the only thing I've
+      // built" rather than "this is the one worth reading in full".
+      //
       // /projects and /projects/chess-rag both render ChessRagPage for now,
       // since there's only one project. When a second one exists, only the
       // element on `projects` needs to change to a real index page — the
@@ -48,11 +51,6 @@ export const router = createBrowserRouter([
         path: paths.lab,
         element: <LabPage />,
         handle: { title: `Lab${suffix}` },
-      },
-      {
-        path: paths.about,
-        element: <AboutPage />,
-        handle: { title: `About${suffix}` },
       },
       {
         path: paths.resume,

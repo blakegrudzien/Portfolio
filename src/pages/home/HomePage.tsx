@@ -36,15 +36,44 @@ export function HomePage() {
         </div>
       </div>
 
+      {/* Two sentences, and the second one is the hook: what I actually
+      did, specific enough to be checked one click away. */}
       <p className={`prose ${styles.intro}`}>
-        CS at Emory, math minor, graduating May 2026. This site is a working
-        example of how I build. Start with the Chess RAG case study below to see
-        the reasoning behind it, not just the result.
+        I'm a backend engineer in the Bay Area, out of Emory as of May 2026.
+        Last summer I rebuilt a telemetry pipeline at Level Home so that files
+        which failed to parse stopped getting deleted.
       </p>
 
       <Link to={paths.projectChessRag} className={styles.cta}>
         Read the Chess RAG case study →
       </Link>
+
+      {/* This used to be the About page. It's here instead: the site has
+      two case studies carrying the depth, and a separate page for three
+      paragraphs was a page to keep current for no gain. */}
+      <div className={`prose ${styles.body}`}>
+        <p>
+          Commits stay small enough to review in one sitting, and I'd rather
+          lose an afternoon figuring out why something actually failed than
+          patch around it and move on. On that pipeline it meant building a
+          Slack bot for the firmware team, hearing it was more than they needed,
+          and cutting it down to a daily digest instead of shipping what I'd
+          already built.
+        </p>
+        <p>
+          I'm looking for backend, platform, and data work. I'm comfortable at
+          the other end of it too, sitting with whoever has the problem and
+          working out what would actually solve it.
+        </p>
+      </div>
+
+      <aside className={styles.aside}>
+        <p>
+          I like puzzles. There's a{' '}
+          <Link to={paths.lab}>twelve-marble weighing problem</Link> here if you
+          want one.
+        </p>
+      </aside>
     </div>
   )
 }

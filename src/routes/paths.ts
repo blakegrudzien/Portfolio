@@ -5,6 +5,5 @@ export const paths = {
   experience: '/experience',
   experienceLevelHome: '/experience/level-home',
   lab: '/lab',
-  about: '/about',
   resume: '/resume',
 } as const
