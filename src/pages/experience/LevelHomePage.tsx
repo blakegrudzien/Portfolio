@@ -12,24 +12,21 @@ export function LevelHomePage() {
     >
       <CaseStudySection heading="The problem">
         <p>
-          I built this during an in-person internship at Level Home, which makes
-          smart locks, doorbells, and bridges. Those devices constantly emit
-          telemetry, logs of what the device just did, used to monitor products
+          I built this during an in-person internship at Level Home, a then recently acquired company which makes
+          smart locks and video doorbells. These devices constantly emit
+          telemetry, logs of what the device just did, that the company's firmware team used to troubleshoot bugs
           and catch issues before customers do.
         </p>
         <p>
-          The pipeline that gets that telemetry from a device to a queryable
+          At the beginning of my internship, the pipeline that takes this telemetry from a device to a queryable
           table had a real problem: when a file failed to parse, usually because
           firmware added a new event type before the pipeline knew how to read
-          it, the pipeline just deleted it. That data was gone, permanently, the
-          moment it failed.
+          it, the pipeline let it fall through, losing it forever. This was happening over 30% of the time. 
         </p>
         <p>
-          This project replaced deletion with something closer to purgatory. A
-          failed file lands in a dead-letter queue instead of disappearing, the
-          firmware team gets notified, and once the parser understands the new
-          event type the file gets redriven, pulled back out of the queue and
-          reprocessed, rather than lost.
+          This project replaced the pipeline with two main goals, a make it more viable for a higher volume of data, 
+          and two: the firmware team should be able to adjust the parser and retry failed files very easily. 
+
         </p>
       </CaseStudySection>
 
@@ -37,23 +34,7 @@ export function LevelHomePage() {
         <PipelineDiagram />
       </CaseStudySection>
 
-      <CaseStudySection heading="Tests & CI">
-        <p>
-          Every pull request ran the Go test suite with coverage, golangci-lint,
-          and govulncheck, plus a container image build to confirm the Lambda
-          image still compiled. The deploy pipeline around that belonged to
-          another team.
-        </p>
-        <p>
-          What I added was the part that made a failing run readable. A
-          coverage-diff step compared the branch against main and commented on
-          the pull request with the delta and any new files that came in under
-          the threshold, so a change that quietly dropped coverage got named
-          before review instead of after. A second step read a failed run and
-          posted the actual reason as a comment, rather than leaving whoever
-          opened the pull request to go find it in the log.
-        </p>
-      </CaseStudySection>
+  
 
       <CaseStudySection heading="Tech stack">
         <p>

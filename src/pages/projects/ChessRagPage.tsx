@@ -81,103 +81,37 @@ export function ChessRagPage() {
     >
       <CaseStudySection heading="The problem">
         <p>
-          Chess questions aren't one kind of question. "How often does the
-          London System win as White?" is a statistics query. "Why is this move
-          strong?" needs annotated commentary, not a number. "Is this position
-          actually winning?" needs a real engine, not an opinion. "Have I seen a
-          game like this before?" is a pattern-matching problem, not a lookup.
-          Chess RAG treats these as genuinely different problems, each routed to
-          the backend built for it, rather than forcing everything through one
-          general-purpose retrieval pipeline and hoping it's close enough.
+          Chess engines surpassed human players decades ago, however they don't 
+          understand chess in the same way humans do. Attempts at ai coaching generally fall flat 
+          because they have to reverse engineer a human readable explanation for a decision made without those 
+          ideas in mind. Chess scholar bypasses this problem by training a model on high level annotations. This 
+          way, the ai never tries to understand the game on its own and instead supplies the user with relevant human
+          comentary to explain the reasoning behind a move. 
         </p>
       </CaseStudySection>
 
       <CaseStudySection heading="Architecture">
         <p>
-          Claude's own native tool-calling — not a hand-rolled intent
-          classifier, not LangChain or LlamaIndex — decides which backend a
-          question actually needs, and can call more than one.
+          Four different backends, each specialized for a different type of 
+          question: SQL for statistics, vector RAG for annotated commentary, 
+          Stockfish for tactical evaluation, and structural similarity for opening matching.
+          Claude uses its own native tool-calling to choose which combination of layers will best answer the 
+          user's question. 
+
+          After the response, the recommendation layer filters Lichess studies and grandmaster games
+           to suggest relevant further study material. Lichess studies are scraped and filtered 
+           through a gradient-boosted classifier so only high quality studies are suggested. Grandmaster 
+           games are picked based on positional relevance.
+
         </p>
         <ExpandablePanelList panels={architectureLayers} defaultOpenId="sql" />
       </CaseStudySection>
 
-      <CaseStudySection heading="Design decisions">
-        <p>
-          <strong>No LangChain or LlamaIndex.</strong> Raw SQL and direct API
-          calls instead — harder to build than wiring up a framework, but every
-          part of the request path is inspectable and easy to explain rather
-          than hidden behind an abstraction layer.
-        </p>
-        <p>
-          <strong>Tool-calling over a routing classifier.</strong> Claude
-          decides which backend a question needs using its own native
-          tool-calling, rather than a hand-trained intent classifier sitting in
-          front of it — one less model to maintain and evaluate.
-        </p>
-        <p>
-          <strong>
-            python-chess as the sole source of truth for move legality.
-          </strong>{' '}
-          Every move gets validated the same way, everywhere in the system — no
-          duplicated, possibly-inconsistent legality logic.
-        </p>
-        <p>
-          <strong>
-            A concurrent Stockfish pool, added after it was needed.
-          </strong>{' '}
-          The engine layer originally ran one position at a time; the pool of
-          subprocesses was added after real, reported slowness under concurrent
-          use, not built speculatively ahead of a problem that might not have
-          happened.
-        </p>
-        <p>
-          <strong>Real error handling on every external call.</strong> Three
-          paid APIs and a Postgres connection all fail sometimes; each has
-          actual handling, not a bare try/except.
-        </p>
-        <p>
-          <strong>A session-local rate limit (8 requests/minute).</strong>{' '}
-          Enough to stop accidental abuse from one session without penalizing
-          anyone else using the app.
-        </p>
-      </CaseStudySection>
-
-      <CaseStudySection heading="Known limitations">
-        <p>
-          <strong>Chat answers synthesize, they don't judge.</strong> Responses
-          combine retrieved commentary and engine output — the model isn't
-          forming its own tactical opinion, it's reporting what the engine and
-          the annotated games actually say.
-        </p>
-        <p>
-          <strong>
-            Structural similarity matches sequences, not understanding.
-          </strong>{' '}
-          The similarity layer finds games with the same opening moves; it has
-          no sense of positional or strategic similarity beyond that.
-        </p>
-        <p>
-          <strong>
-            The recommendation classifier is trained on a small, single-labeler
-            set.
-          </strong>{' '}
-          184 hand-labeled examples, all labeled by one person — a real, if
-          small, dataset, not a large or independently verified one.
-        </p>
-        <p>
-          <strong>Desktop only, for now.</strong>
-        </p>
-        <p>
-          <strong>
-            Trend synthesis across time is designed for, not built.
-          </strong>{' '}
-          The architecture supports it; it isn't implemented yet.
-        </p>
-      </CaseStudySection>
+   
 
       <CaseStudySection heading="Tech stack">
         <p>
-          Claude Sonnet 5 (native tool calling) · Voyage AI voyage-4 embeddings
+          Python · Claude Sonnet 5 (native tool calling) · Voyage AI voyage-4 embeddings
           · Postgres + pgvector (Neon) · Stockfish via python-chess (UCI) ·
           Streamlit with a custom draggable board (wraps chessboard.js) · ruff
         </p>

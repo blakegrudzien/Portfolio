@@ -13,11 +13,10 @@ export function ResumePage() {
     <div className={styles.page}>
       <h1>Resume &amp; contact</h1>
 
+      {/* The one place a job search belongs. The rest of the site is a
+      personal site and reads like one. */}
       <p className={`prose ${styles.intro}`}>
-        The short version is on this site: the{' '}
-        <a href="/projects/chess-rag">Chess RAG case study</a> and the{' '}
-        <a href="/experience/level-home">Level Home pipeline</a> are the two
-        pieces of work worth reading in full. The resume covers the rest.
+        I'm looking for backend, platform, and data roles in the Bay Area.
       </p>
 
       {/* A real PDF rather than the resume re-typed as HTML. Recruiters

@@ -55,10 +55,11 @@
   margin-bottom: var(--space-6);
 }
 
-.cta {
+.work {
+  margin-top: var(--space-5);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  font-weight: 500;
+  color: var(--color-ink-muted);
 }
 
 .body {
