@@ -208,7 +208,7 @@ export const NODE_INFO: Record<
   slack: {
     context: 'Notifies the firmware team when a file fails.',
     tradeoff:
-      'Started as a real-time alert bot, but switched to a daily digest instead after talks with the firmware team.',
+      'Started as a real-time alert on every failure. After talking it through with the firmware team it became a daily digest of what is sitting in the queue, with redrive available from Slack alongside it.',
     payload: {
       label: 'Daily digest',
       lines: ['3 files failed to parse', 'in the last 24h'],

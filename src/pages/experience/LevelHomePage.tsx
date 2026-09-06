@@ -12,11 +12,11 @@ export function LevelHomePage() {
     >
       <CaseStudySection heading="The problem">
         <p>
-          I built this during an in-person internship at Level Home, a then
-          recently acquired company which made smart locks and video doorbells
-          out of Redwood City, CA. These devices constantly emitted telemetry,
-          logs of what the device just did, that the company's firmware team
-          used to troubleshoot bugs and catch issues before customers did.
+          I built this during an in-person internship at Level Home, a then recently
+          acquired company in Redwood City that made smart locks and video
+          doorbells. These devices constantly emitted telemetry, logs of what
+          the device just did, that the company's firmware team used to
+          troubleshoot bugs and catch issues before customers did.
         </p>
         <p>
           At the beginning of my internship, the pipeline that took this
@@ -27,9 +27,9 @@ export function LevelHomePage() {
         </p>
         <p>
           This project replaced the pipeline with two main goals: one, make it
-          more viable for a higher volume of data; and two, the firmware team
-          should be able to adjust the parser and retry failed files very
-          easily. By the end of the internship, data loss was under 1%.
+          viable for a higher volume of data; and two, let the firmware team
+          adjust the parser and retry failed files easily. By the end of the
+          internship, data loss was under 1%.
         </p>
         <p>
           Telling the firmware team a file had failed was part of that second

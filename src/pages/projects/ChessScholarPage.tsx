@@ -92,21 +92,40 @@ export function ChessScholarPage() {
         </p>
       </CaseStudySection>
 
-      <CaseStudySection heading="Architecture">
-        <p>
-          Four different backend data sources, each specialized for a different
-          type of question: SQL for aggregated statistics, vector RAG for
-          annotated commentary, Stockfish for engine evaluation, and structural
-          similarity for matching user games to games in the database. Claude
-          uses its own native tool-calling to choose which combination of layers
-          will best answer the user's question. After the response, the
-          recommendation layer filters Lichess studies and grandmaster games to
-          suggest relevant further study material. Lichess studies are scraped
-          and filtered through a gradient-boosted classifier so only
-          high-quality studies are suggested. Grandmaster games are picked based
-          on positional relevance.
-        </p>
-        <ExpandablePanelList panels={architectureLayers} defaultOpenId="sql" />
+      <CaseStudySection heading="Architecture" prose={false}>
+        <div className="prose">
+          <p>
+            Four different backend data sources, each specialized for a
+            different type of question: SQL for aggregated statistics, vector
+            RAG for annotated commentary, Stockfish for engine evaluation, and
+            structural similarity for matching user games to games in the
+            database. Claude uses its own native tool-calling to choose which
+            combination of layers will best answer the user's question. After
+            the response, the recommendation layer filters Lichess studies and
+            grandmaster games to suggest relevant further study material.
+            Lichess studies are scraped and filtered through a gradient-boosted
+            classifier so only high-quality studies are suggested. Grandmaster
+            games are picked based on positional relevance.
+          </p>
+        </div>
+
+
+        <figure className={styles.shot}>
+          <img
+            src="/chess-scholar.webp"
+            alt="Chess Scholar answering a question about a Queen's Gambit Declined position. The response is broken into labelled layers: database facts across 506 games, a Stockfish evaluation of +0.34, and a strategic plan quoted from annotated games."
+            width={1600}
+            height={937}
+            loading="lazy"
+          />
+        </figure>
+
+        <div className="prose">
+          <ExpandablePanelList
+            panels={architectureLayers}
+            defaultOpenId="sql"
+          />
+        </div>
       </CaseStudySection>
 
       <CaseStudySection heading="Known limitations">

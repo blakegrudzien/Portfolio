@@ -29,3 +29,18 @@
 .ctaPrimary:hover {
   background: var(--color-accent-hover);
 }
+
+/* Full width of the section rather than the prose measure: the screenshot
+   is only legible if it gets more room than a line of text does. */
+.shot {
+  margin: var(--space-5) 0 var(--space-6);
+  max-width: 56rem;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
