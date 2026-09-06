@@ -4,7 +4,7 @@ import { LevelHomePage } from '../pages/experience/LevelHomePage'
 import { HomePage } from '../pages/home/HomePage'
 import { LabPage } from '../pages/lab/LabPage'
 import { NotFoundPage } from '../pages/not-found/NotFoundPage'
-import { ChessRagPage } from '../pages/projects/ChessRagPage'
+import { ChessScholarPage } from '../pages/projects/ChessScholarPage'
 import { ResumePage } from '../pages/resume/ResumePage'
 import { paths } from './paths'
 
@@ -23,19 +23,19 @@ export const router = createBrowserRouter([
       // the single case study, which reads as "this is the only thing I've
       // built" rather than "this is the one worth reading in full".
       //
-      // /projects and /projects/chess-rag both render ChessRagPage for now,
+      // /projects and /projects/chess-scholar both render ChessScholarPage for now,
       // since there's only one project. When a second one exists, only the
       // element on `projects` needs to change to a real index page — the
-      // chess-rag route and its URL stay exactly as they are.
+      // chess-scholar route and its URL stay exactly as they are.
       {
         path: paths.projects,
-        element: <ChessRagPage />,
-        handle: { title: `Chess RAG${suffix}` },
+        element: <ChessScholarPage />,
+        handle: { title: `Chess Scholar${suffix}` },
       },
       {
-        path: paths.projectChessRag,
-        element: <ChessRagPage />,
-        handle: { title: `Chess RAG${suffix}` },
+        path: paths.projectChessScholar,
+        element: <ChessScholarPage />,
+        handle: { title: `Chess Scholar${suffix}` },
       },
       {
         path: paths.experience,

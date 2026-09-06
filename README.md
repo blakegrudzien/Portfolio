@@ -2,7 +2,7 @@
 
 Blake Grudzien's portfolio site — source at [blakegrudzien/Portfolio](https://github.com/blakegrudzien/Portfolio). A statically-built React site, not a template: each project/experience page is a case study that explains the reasoning behind what was built, not just the result.
 
-**Status:** in progress. The Chess RAG and Level Home case studies and the 12-marbles puzzle are built; the About page and Level Home's "my story" section are still placeholders.
+**Status:** in progress. The Chess Scholar and Level Home case studies and the 12-marbles puzzle are built; the About page and Level Home's "my story" section are still placeholders.
 
 ## Stack
 
@@ -27,6 +27,6 @@ npm run build        # typecheck + production build
 
 ## A couple of design decisions worth naming
 
-- **Direct-render-now, index-later routing.** `/projects` and `/projects/chess-rag` currently render the same page, since there's only one project; `/experience` and `/experience/level-home` likewise. Adding a second entry later is a one-line swap of the index route's element — the specific case-study routes and their URLs don't move.
-- **No data-driven "sections" abstraction for case studies.** With two case studies, a generic content schema would be premature — page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess RAG page.
+- **Direct-render-now, index-later routing.** `/projects` and `/projects/chess-scholar` currently render the same page, since there's only one project; `/experience` and `/experience/level-home` likewise. Adding a second entry later is a one-line swap of the index route's element — the specific case-study routes and their URLs don't move.
+- **No data-driven "sections" abstraction for case studies.** With two case studies, a generic content schema would be premature — page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess Scholar page.
 - **The Level Home pipeline diagram's animation state is split into pure data/logic and DOM-driving code** (`pipelineData.ts`, `pipelineFlow.ts`, `usePipelineAnimation.ts`) specifically so the sequencing logic — what phase follows what action — can be unit tested without a real browser animation to wait on.
