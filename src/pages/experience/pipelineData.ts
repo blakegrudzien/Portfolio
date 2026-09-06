@@ -114,7 +114,7 @@ export const NODE_INFO: Record<
 > = {
   device: {
     context:
-      "Level Home's smart locks, doorbells, and bridges emit telemetry as they operate.",
+      "Level Home's smart locks, and video doorbells emit telemetry as they operate.",
     payload: {
       label: 'Separate readings',
       lines: [
@@ -149,9 +149,9 @@ export const NODE_INFO: Record<
   },
   sqs: {
     context:
-      'An event notification queues up here the moment a new file lands. The queue holds a pointer — bucket and key — not the payload; Lambda fetches the object itself.',
+      'An event notification queues up here the moment a new file lands. The queue holds a pointer, bucket and key, not the payload; Lambda fetches the object itself.',
     tradeoff:
-      "Chosen over EventBridge — EventBridge's main advantage is fanning out to multiple destinations, which didn't matter here (there's only one pathway). SQS came with a native DLQ and simple retry mechanics out of the box, and was cheaper.",
+      "Chosen over EventBridge: EventBridge's main advantage is fanning out to multiple destinations, which didn't matter here (there's only one pathway). SQS came with a native DLQ and simple retry mechanics out of the box, and was cheaper.",
     payload: {
       label: 'Event notification',
       lines: ['{', '  "bucket": "data-lake",', '  "key": "…json.gz"', '}'],
@@ -160,7 +160,7 @@ export const NODE_INFO: Record<
   lambda: {
     context: 'Picks up the queued file and hands it to the parser.',
     tradeoff:
-      'Both success and failure route through this same function — one central place to check either outcome, and it keeps parsing logic separate from placement logic.',
+      'Both success and failure route through this same function, one central place to check either outcome, and it separates parsing logic and placement logic.',
     payload: {
       label: 'Fetched and extracted',
       lines: ['get → gunzip → raw hex', '4F2A9C013E88D200714BFF…'],
@@ -168,7 +168,7 @@ export const NODE_INFO: Record<
   },
   parser: {
     context:
-      'Decodes the raw device bytes into a structured record. Firmware-team owned — this project treats it as a pluggable step, not something its own code needs to understand internally.',
+      'Legacy code written in Rust, decodes the raw device bytes into a structured record. Firmware-team owned. This project treats it as a pluggable step, not something its own code needs to understand internally.',
     payload: {
       label: 'Decoded records',
       lines: [
@@ -181,7 +181,7 @@ export const NODE_INFO: Record<
   output: {
     context: 'Successfully parsed records get converted and written here.',
     tradeoff:
-      'Uses Apache Arrow to write Parquet. Originally used DuckDB, but it required CGo=1, which meant adjusting other parts of the project to accommodate it — Arrow worked without that constraint.',
+      'Uses Apache Arrow to write Parquet. Originally used DuckDB, but it required CGo=1, which meant adjusting other parts of the project to accommodate it, Arrow worked without that constraint.',
     payload: {
       label: 'Converted to Parquet',
       lines: ['telemetry-174791.parquet', '4 rows · columnar (Arrow)'],
@@ -189,7 +189,7 @@ export const NODE_INFO: Record<
   },
   athena: {
     context:
-      'Queries run directly against the Parquet files here — no separate database to keep in sync.',
+      'Queries run directly against the Parquet files here, no separate database to keep in sync.',
     payload: {
       label: 'Queryable in place',
       lines: ['SELECT battery, source', 'FROM telemetry …'],
@@ -197,9 +197,9 @@ export const NODE_INFO: Record<
   },
   dlq: {
     context:
-      "Failed files land here instead of being deleted. Redriving doesn't repair a file — the parser gets fixed, and the same bytes then parse.",
+      "Failed files land here instead of being deleted. Redriving doesn't repair a file the parser gets adjusted to work for the new telemetry, and the same bytes then parse.",
     tradeoff:
-      "Uses the plain SQS dead-letter queue rather than a custom one. A custom DLQ could retry only genuine AWS/connectivity errors and give up immediately on unrecoverable parsing errors — the native one can't tell the difference. Traded that precision for needing zero custom code and being able to reprocess the whole queue with one command.",
+      "Uses the plain SQS dead-letter queue rather than a custom one. A custom DLQ could retry only genuine AWS/connectivity errors and give up immediately on unrecoverable parsing errors, the native one can't tell the difference. Traded that precision for needing zero custom code and being able to reprocess the whole queue with one command.",
     payload: {
       label: 'Parse error',
       lines: ['⚠ unrecognized event', '  type 0x9E'],
@@ -208,7 +208,7 @@ export const NODE_INFO: Record<
   slack: {
     context: 'Notifies the firmware team when a file fails.',
     tradeoff:
-      'Started as a real-time alert bot, but the firmware team said that was more than they needed, so it became a daily digest instead. Redriving straight from Slack was considered too, then deliberately dropped once it was clear the firmware team would have AWS console access anyway.',
+      'Started as a real-time alert bot, but switched to a daily digest instead after talks with the firmware team.',
     payload: {
       label: 'Daily digest',
       lines: ['3 files failed to parse', 'in the last 24h'],

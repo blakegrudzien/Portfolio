@@ -6,7 +6,7 @@ import styles from './ChessScholarPage.module.css'
 const architectureLayers = [
   {
     id: 'sql',
-    title: 'SQL — game statistics',
+    title: 'SQL: game statistics',
     children: (
       <p>
         Direct queries over 127,435 games and 10.2 million moves for anything
@@ -16,7 +16,7 @@ const architectureLayers = [
   },
   {
     id: 'vector-rag',
-    title: 'Vector RAG — annotated commentary',
+    title: 'Vector RAG: annotated commentary',
     children: (
       <p>
         pgvector search over 468,862 chunks of annotated commentary, embedded
@@ -27,35 +27,35 @@ const architectureLayers = [
   },
   {
     id: 'engine',
-    title: 'Engine evaluation — Stockfish',
+    title: 'Engine evaluation: Stockfish',
     children: (
       <p>
         Real Stockfish analysis through a pool of subprocesses, run concurrently
         so multiple requests don't queue behind each other. The model never
-        judges a position itself — every tactical claim in a chat response cites
-        an actual engine call.
+        judges a position itself, every tactical claim in a chat response cites
+        engine analysis.
       </p>
     ),
   },
   {
     id: 'similarity',
-    title: 'Structural similarity — opening matching',
+    title: 'Structural similarity: opening matching',
     children: (
       <p>
-        Opening-move-prefix matching against the game database, surfaced as
-        "games that started like this." Explicitly labeled illustrative rather
-        than authoritative — it matches move sequences, not chess understanding.
+        Opening-move-prefix matching against the game database. Strictly matches 
+        to games with the same opening sequence, not similar positions.
       </p>
     ),
   },
   {
     id: 'recommendations',
-    title: 'Recommendations — study filtering',
+    title: 'Recommendations: study filtering',
     children: (
       <p>
         A separate agent filters scraped Lichess studies through a
-        gradient-boosted classifier (0.887 cross-validated ROC-AUC on 184
-        hand-labeled examples) before surfacing them.
+        gradient-boosted classifier (0.887 cross-validated ROC-AUC trained on
+        hand-labeled examples) before surfacing them. Studies that pass the check
+        are chosen based on positional relevance to the user's question.
       </p>
     ),
   },
@@ -94,10 +94,10 @@ export function ChessScholarPage() {
 
       <CaseStudySection heading="Architecture">
         <p>
-          Four different backends, each specialized for a different type of
-          question: SQL for statistics, vector RAG for annotated commentary,
-          Stockfish for tactical evaluation, and structural similarity for
-          opening matching. Claude uses its own native tool-calling to choose
+          Four different backend dat sources, each specialized for a different type of
+          question: SQL for aggregated statistics, vector RAG for annotated commentary,
+          Stockfish for engine evaluation, and structural similarity for matching user 
+          games to games in the database. Claude uses its own native tool-calling to choose
           which combination of layers will best answer the user's question.
           After the response, the recommendation layer filters Lichess studies
           and grandmaster games to suggest relevant further study material.
@@ -117,15 +117,13 @@ export function ChessScholarPage() {
         </p>
         <p>
           The similarity layer matches opening move sequences, not positional
-          understanding, so "games that started like this" is doing less than it
-          sounds like it is. The study recommender's classifier scored 0.887
-          cross-validated ROC-AUC, but it was trained on 184 examples I labeled
-          myself, so that number reflects one person's judgment of what makes a
-          good study.
+          understanding, which can still diverge drastically after the match. 
+          The study recommender's classifier scored 0.887 cross-validated ROC-AUC, 
+          but it was trained 184 hand labeled examples, so that number reflects one 
+          person's judgment of what makes a high quality study.
         </p>
         <p>
-          It's desktop only right now, and synthesizing trends across a player's
-          games over time is designed for but not built.
+          The UI currently only has desktop in mind, mobile integration will come later.
         </p>
       </CaseStudySection>
 
@@ -134,7 +132,7 @@ export function ChessScholarPage() {
           Python · Claude Sonnet 5 (native tool calling) · Voyage AI voyage-4
           embeddings · Postgres + pgvector (Neon) · Stockfish via python-chess
           (UCI) · Streamlit with a custom draggable board (wraps chessboard.js)
-          · ruff
+          
         </p>
       </CaseStudySection>
 
