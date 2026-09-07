@@ -3,12 +3,10 @@ import { paths } from '../../routes/paths'
 import styles from './HomePage.module.css'
 
 /**
- * Point this at the real photo when it's ready (put the file in `public/`
- * and set the path here, e.g. '/blake.jpg'). While it's empty the header
- * reserves the same space and draws a placeholder, so the layout doesn't
- * shift when the photo lands. Replace before this goes anywhere public.
+ * Cropped square, so it can be rendered as a circle without cutting into
+ * the face. Served at 400px for a 160px slot, which covers 2x displays.
  */
-const PHOTO_SRC = ''
+const PHOTO_SRC = '/headshot.webp'
 
 export function HomePage() {
   return (
@@ -19,8 +17,8 @@ export function HomePage() {
             className={styles.photo}
             src={PHOTO_SRC}
             alt="Blake Grudzien"
-            width={160}
-            height={160}
+            width={400}
+            height={400}
           />
         ) : (
           <div className={styles.photoPlaceholder}>

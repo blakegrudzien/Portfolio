@@ -8,14 +8,14 @@ export function LevelHomePage() {
       kind="experience"
       title="Level Home"
       dates="May 2025 – September 2025"
-      tags={['Go', 'AWS', 'Kinesis Firehose', 'Parquet']}
+      tags={['Go', 'AWS Lambda', 'Kinesis', 'Parquet']}
     >
       <CaseStudySection heading="The problem">
         <p>
-          I built this during an in-person internship at Level Home, a then recently
-          acquired company in Redwood City that made smart locks and video
-          doorbells. These devices constantly emitted telemetry, logs of what
-          the device just did, that the company's firmware team used to
+          I built this during an in-person internship at Level Home, a then
+          recently acquired company in Redwood City that made smart locks and
+          video doorbells. These devices constantly emitted telemetry, logs of
+          what the device just did, that the company's firmware team used to
           troubleshoot bugs and catch issues before customers did.
         </p>
         <p>
@@ -30,6 +30,12 @@ export function LevelHomePage() {
           viable for a higher volume of data; and two, let the firmware team
           adjust the parser and retry failed files easily. By the end of the
           internship, data loss was under 1%.
+        </p>
+        <p>
+          The event-driven shape and the plug-and-play parser interface were a
+          senior engineer's design. I built the Go service around them: the SQS
+          and DLQ wiring, the Parquet write path, the tests, and the Slack
+          notifications.
         </p>
         <p>
           Telling the firmware team a file had failed was part of that second

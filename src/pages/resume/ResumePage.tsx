@@ -1,12 +1,7 @@
 import { ContactSection } from './ContactSection'
 import styles from './ResumePage.module.css'
 
-/**
- * Put the PDF in `public/` and point this at it, e.g.
- * '/blake-grudzien-resume.pdf'. While it's empty the download button is
- * left out entirely rather than shipping a link that 404s.
- */
-const RESUME_PDF = ''
+const RESUME_PDF = '/Blake_Grudzien_Resume.pdf'
 
 export function ResumePage() {
   return (

@@ -19,10 +19,6 @@ export const router = createBrowserRouter([
         element: <HomePage />,
         handle: { title: 'Blake Grudzien' },
       },
-      // TODO: /projects needs a full refactor. Right now it direct-renders
-      // the single case study, which reads as "this is the only thing I've
-      // built" rather than "this is the one worth reading in full".
-      //
       // /projects and /projects/chess-scholar both render ChessScholarPage for now,
       // since there's only one project. When a second one exists, only the
       // element on `projects` needs to change to a real index page. The

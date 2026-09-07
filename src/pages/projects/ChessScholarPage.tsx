@@ -63,7 +63,7 @@ const architectureLayers = [
 
 const demoLink = {
   label: 'Live demo',
-  href: 'https://chess-rag-blake.streamlit.app',
+  href: 'https://chess-scholar.streamlit.app/',
 }
 const repoLink = {
   label: 'Repo',
@@ -76,7 +76,7 @@ export function ChessScholarPage() {
     <CaseStudyShell
       kind="project"
       title="Chess Scholar"
-      tags={['Claude', 'pgvector', 'Stockfish', 'Streamlit']}
+      tags={['Python', 'Postgres', 'RAG', 'Claude tool-calling']}
       links={links}
     >
       <CaseStudySection heading="The problem">
@@ -108,7 +108,6 @@ export function ChessScholarPage() {
             games are picked based on positional relevance.
           </p>
         </div>
-
 
         <figure className={styles.shot}>
           <img
