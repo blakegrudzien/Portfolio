@@ -215,16 +215,12 @@
   gap: var(--space-4);
 }
 
-.primaryButton,
-.secondaryButton {
+.primaryButton {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 500;
   padding: var(--space-3) var(--space-5);
   border-radius: var(--radius-md);
-}
-
-.primaryButton {
   border: 1px solid var(--color-accent);
   background: var(--color-accent);
   color: var(--color-on-accent);
@@ -234,14 +230,24 @@
   background: var(--color-accent-hover);
 }
 
-.secondaryButton {
-  border: 1px solid var(--color-ink);
-  background: var(--color-bg);
-  color: var(--color-ink);
+/* Deliberately quiet, and pushed to the far end of the row. Redrive is
+   the action the diagram is arguing for; pausing is a courtesy to someone
+   trying to read a panel while files move past it, and it should not
+   compete for attention with the thing worth clicking. */
+.quietButton {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  background: none;
+  border: none;
+  padding: var(--space-3) 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.secondaryButton:hover {
-  background: var(--color-surface);
+.quietButton:hover {
+  color: var(--color-ink);
 }
 
 .regionsToggle {

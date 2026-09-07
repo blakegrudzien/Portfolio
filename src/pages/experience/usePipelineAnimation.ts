@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  ATHENA_CAPACITY,
   SEGMENTS,
   SEGMENT_DURATIONS_MS,
   getNode,
@@ -10,6 +9,12 @@ import {
   type Phase,
   type SegmentKey,
 } from './pipelineData'
+import {
+  createSeating,
+  dlqClusterOffset,
+  type Seating,
+  type SeatedFile,
+} from './pipelineSeating'
 import {
   getFinalPhase,
   getFlow,
@@ -61,6 +66,11 @@ export interface FlowInstance {
 const MIN_SPAWN_DELAY_MS = 1200
 const MAX_SPAWN_DELAY_MS = 2000
 const MAX_TRAVELING = 7
+/** How long past a hop's own duration to wait for its `transitionend`
+ * before assuming it is never coming. Generous on purpose: this exists to
+ * stop a flow wedging forever, not to police timing, and firing it early
+ * would cut a hop short that was about to land on its own. */
+const TRANSITION_WATCHDOG_SLACK_MS = 400
 
 function randomSpawnDelay() {
   return (
@@ -74,15 +84,6 @@ function randomSpawnDelay() {
  * the DLQ is drawn as a bin with a floor, the pile belongs inside it
  * rather than in the empty space underneath, where the node's label now
  * lives. */
-function dlqClusterOffset(slot: number) {
-  const col = slot % 4
-  const row = Math.floor(slot / 4) % 3
-  // Rows land on the centers of the bin's three compartments rather than
-  // on the lines dividing them, and fill from the bottom up. A backlog
-  // piles up, it doesn't hang from the ceiling.
-  return { dx: (col - 1.5) * 13, dy: 16 - row * 16 }
-}
-
 interface StaticSpot {
   at: NodeId
   seat: { x: number; y: number }
@@ -111,10 +112,9 @@ function staticScene(): { spot: StaticSpot; flow: FlowInstance }[] {
       phase: 'traveling-common' as Phase,
     })),
     ...[0, 1, 2].map((i) => {
-      const { dx, dy } = dlqClusterOffset(i)
       return {
         at: 'dlq' as NodeId,
-        seat: { x: dx, y: dy },
+        seat: dlqClusterOffset(i),
         phase: 'in-dlq' as Phase,
       }
     }),
@@ -147,9 +147,19 @@ export function usePipelineAnimation() {
   // Initialised directly rather than set from an effect: for a
   // reduced-motion reader this *is* the diagram, not a later correction to
   // an empty one.
-  const initialSceneRef = useRef(prefersReducedMotion() ? staticScene() : [])
+  //
+  // Assigned through a null check rather than passed to useRef, which has
+  // no lazy initialiser: the argument form is evaluated on every render
+  // and discarded on all but the first, so staticScene() (a dozen objects,
+  // each seeded with Math.random) would be rebuilt and thrown away every
+  // time this component rendered. The effect below drains it to [].
+  const initialSceneRef = useRef<ReturnType<typeof staticScene> | null>(null)
+  if (initialSceneRef.current === null) {
+    initialSceneRef.current = prefersReducedMotion() ? staticScene() : []
+  }
+  const initialScene = initialSceneRef.current
   const [flows, setFlows] = useState<FlowInstance[]>(() =>
-    initialSceneRef.current.map(({ flow }) => flow),
+    initialScene.map(({ flow }) => flow),
   )
 
   // One DOM node per flow, addressed by id. Travel is animated
@@ -157,16 +167,21 @@ export function usePipelineAnimation() {
   const tokenElsRef = useRef(new Map<string, SVGGElement>())
   const mountedRef = useRef(true)
   const idCounterRef = useRef(0)
-  const dlqSlotCounterRef = useRef(0)
-  // Finished records, oldest first. Athena's grid holds a working set
-  // rather than everything ever written, so this is bounded, but a record
-  // stays visible long after its own journey ended, which is the point:
-  // the grid filling up is the only evidence on screen that the pipeline
-  // has been doing anything for the last few minutes.
-  const athenaParkedRef = useRef<string[]>([])
-  // Files waiting in SQS, front of the queue first.
-  const sqsQueueRef = useRef<string[]>([])
-  const seatCountersRef = useRef(new Map<NodeId, number>())
+  // Who is sitting where: the SQS queue, Athena's bounded working set,
+  // the DLQ pile and the per-node seat counters. All of it is plain data
+  // with rules attached, so it lives in pipelineSeating and is unit
+  // tested there. Built through a null check for the same reason as the
+  // scene above: useRef would rebuild it on every render.
+  const seatingRef = useRef<Seating | null>(null)
+
+  /** The seating model for this mount, built on first use. Read through a
+   * function rather than held in a render-scope const so that everything
+   * touching it stays ref-only, and the effects that call those functions
+   * don't pick up a new dependency that re-runs them every render. */
+  function seating(): Seating {
+    seatingRef.current ??= createSeating()
+    return seatingRef.current
+  }
   // Mirrors "how many ambient flows are mid-journey" without reading state,
   // so the spawn loop below can stay one long-lived effect instead of being
   // torn down and rebuilt every time any flow changes.
@@ -177,14 +192,50 @@ export function usePipelineAnimation() {
   const pendingStartsRef = useRef(
     new Map<string, { trigger: Trigger; onSettled: () => void }>(),
   )
+  // Whether ambient traffic is held. Kept as a ref as well as state
+  // because `schedule` below reads it when a timer fires, long after the
+  // render that set it.
+  const [paused, setPaused] = useState(false)
+  const pausedRef = useRef(false)
+  // Steps whose pause elapsed while the diagram was held. They run on
+  // resume, so pausing stops the pipeline rather than dropping files
+  // partway through it.
+  const heldStepsRef = useRef<(() => void)[]>([])
+  // Every pending timeout this hook owns. A flow is a chain of hops joined
+  // by timeouts, so at any moment several are outstanding; without a
+  // handle on them, navigating away left ~7 flows still stepping through
+  // the diagram, each one scheduling its own successor. mountedRef stops
+  // those callbacks writing state, which is exactly what made it invisible:
+  // no warning, just work continuing against a component that is gone.
+  const timersRef = useRef(new Set<number>())
+
+  /** setTimeout, but cancellable in bulk on unmount and inert once the
+   * component has gone. Every timeout in this file goes through here. */
+  function setTrackedTimeout(callback: () => void, delayMs: number): number {
+    const id = window.setTimeout(() => {
+      timersRef.current.delete(id)
+      if (!mountedRef.current) return
+      callback()
+    }, delayMs)
+    timersRef.current.add(id)
+    return id
+  }
+
+  function clearTrackedTimeout(id: number) {
+    timersRef.current.delete(id)
+    window.clearTimeout(id)
+  }
 
   useEffect(() => {
     // StrictMode's dev-only mount -> cleanup -> mount again means the
     // cleanup below can run once before settling, so re-arm on setup too, or
     // that first (non-final) cleanup would permanently wedge this false.
     mountedRef.current = true
+    const timers = timersRef.current
     return () => {
       mountedRef.current = false
+      for (const id of timers) window.clearTimeout(id)
+      timers.clear()
     }
   }, [])
 
@@ -202,41 +253,28 @@ export function usePipelineAnimation() {
     setFlows((current) => current.filter((flow) => flow.id !== id))
   }
 
-  /** Lays the queue out from the exit backwards. Called on every change
-   * to it, so the file behind one that just left visibly slides forward
-   * into its place instead of the gap simply appearing. */
-  function reseatSqsQueue() {
-    sqsQueueRef.current.forEach((queuedId, index) => {
-      const el = tokenElsRef.current.get(queuedId)
-      if (!el) return
-      const seat = sqsQueueSeat(index)
+  /** Draws a queue layout, animating each file to its slot so the one
+   * behind a departure visibly slides forward instead of the gap simply
+   * appearing. The order itself is decided by the seating model. */
+  function applySqsLayout(layout: SeatedFile[]) {
+    for (const { id, seat } of layout) {
+      const el = tokenElsRef.current.get(id)
+      if (!el) continue
       el.style.setProperty(
         'transition',
         'translate var(--motion-duration-slow) var(--motion-ease)',
       )
       el.style.setProperty('translate', `${seat.x}px ${seat.y}px`)
-    })
+    }
   }
 
   function enqueueAtSqs(id: string) {
-    if (!sqsQueueRef.current.includes(id)) sqsQueueRef.current.push(id)
-    reseatSqsQueue()
+    applySqsLayout(seating().enqueueSqs(id))
   }
 
   function leaveSqsQueue(id: string) {
-    const before = sqsQueueRef.current.length
-    sqsQueueRef.current = sqsQueueRef.current.filter((queued) => queued !== id)
-    if (sqsQueueRef.current.length !== before) reseatSqsQueue()
-  }
-
-  /** Rotates through a node's seats so two tokens stopped at the same
-   * stop don't land on top of each other. Deliberately not real occupancy
-   * tracking: a wrong guess here costs a slight overlap, and the
-   * bookkeeping to do better would outweigh that. */
-  function nextSeatSlot(nodeId: NodeId) {
-    const next = (seatCountersRef.current.get(nodeId) ?? 0) + 1
-    seatCountersRef.current.set(nodeId, next)
-    return next
+    const layout = seating().dequeueSqs(id)
+    if (layout) applySqsLayout(layout)
   }
 
   function registerToken(id: string, el: SVGGElement | null) {
@@ -294,10 +332,31 @@ export function usePipelineAnimation() {
       el.style.setProperty('translate', '0px 0px')
     })
 
-    const handleEnd = (event: TransitionEvent) => {
-      // Two properties are animating now; only the travel ends the hop.
-      if (event.propertyName !== 'offset-distance') return
+    // A hop ends exactly once, on whichever of these comes first. Arrival
+    // used to hang solely off `transitionend`: if that event never arrived,
+    // because the transition was cancelled or interrupted, the sequence
+    // stopped there permanently *and* onDone never ran, so this flow's
+    // traveling slot was never released. Every occurrence would have cost
+    // one of MAX_TRAVELING slots for the life of the page, throttling
+    // ambient traffic further each time until nothing moved at all.
+    let settled = false
+
+    const settle = (arrivedByTransition: boolean) => {
+      if (settled) return
+      settled = true
       el.removeEventListener('transitionend', handleEnd)
+      el.removeEventListener('transitioncancel', handleCancel)
+      clearTrackedTimeout(watchdog)
+
+      if (!arrivedByTransition) {
+        // The travel never played out, so put the file where it was headed.
+        // Arriving abruptly is much better than stopping halfway down an
+        // edge and staying there.
+        el.style.setProperty('transition', 'none')
+        el.style.setProperty('offset-distance', '100%')
+        el.style.setProperty('translate', '0px 0px')
+      }
+
       // Settle into the node's artwork rather than stopping dead on its
       // center: onto the floor of the lake, into a slot of the queue, into
       // a cell of the grid. runSegment clears `translate` on the way out,
@@ -308,7 +367,10 @@ export function usePipelineAnimation() {
         onDone()
         return
       }
-      const seat = nodeSeat(arrivalNodeId, nextSeatSlot(arrivalNodeId))
+      const seat = nodeSeat(
+        arrivalNodeId,
+        seating().nextSeatSlot(arrivalNodeId),
+      )
       if (seat) {
         el.style.setProperty(
           'transition',
@@ -319,7 +381,28 @@ export function usePipelineAnimation() {
       updateFlow(id, { arrivedAt: arrivalNodeId })
       onDone()
     }
+
+    const handleEnd = (event: TransitionEvent) => {
+      // Two properties are animating now; only the travel ends the hop.
+      if (event.propertyName !== 'offset-distance') return
+      settle(true)
+    }
+
+    const handleCancel = (event: TransitionEvent) => {
+      if (event.propertyName !== 'offset-distance') return
+      settle(false)
+    }
+
+    // Last resort, and normally dead code. Under prefers-reduced-motion
+    // base.css collapses every transition to near zero, so the real event
+    // still wins this race by a wide margin there too.
+    const watchdog = setTrackedTimeout(
+      () => settle(false),
+      durationMs + TRANSITION_WATCHDOG_SLACK_MS,
+    )
+
     el.addEventListener('transitionend', handleEnd)
+    el.addEventListener('transitioncancel', handleCancel)
   }
 
   // The pause between segments (runFlowLegs/runSequence's `schedule`
@@ -337,7 +420,20 @@ export function usePipelineAnimation() {
     const prefersReducedMotion = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches
-    window.setTimeout(callback, prefersReducedMotion ? 20 : delayMs)
+    setTrackedTimeout(
+      () => {
+        // Held rather than dropped, and held here rather than by not
+        // starting the timer, so a file already in flight still finishes the
+        // hop it is on and comes to rest in a node instead of stopping
+        // halfway along an edge.
+        if (pausedRef.current) {
+          heldStepsRef.current.push(callback)
+          return
+        }
+        callback()
+      },
+      prefersReducedMotion ? 20 : delayMs,
+    )
   }
 
   function runTrigger(id: string, trigger: Trigger, onSettled: () => void) {
@@ -354,10 +450,10 @@ export function usePipelineAnimation() {
         if (finalPhase === 'in-dlq') {
           // Park it in the DLQ cluster, where it stays, visibly, until a
           // redrive sweeps the whole backlog.
-          const { dx, dy } = dlqClusterOffset(dlqSlotCounterRef.current++)
+          const seat = seating().nextDlqSeat()
           tokenElsRef.current
             .get(id)
-            ?.style.setProperty('translate', `${dx}px ${dy}px`)
+            ?.style.setProperty('translate', `${seat.x}px ${seat.y}px`)
         }
         updateFlow(id, { phase: finalPhase })
         onSettled()
@@ -390,23 +486,17 @@ export function usePipelineAnimation() {
   // spawned flow's first segment does. Runs once, since it only ever has
   // anything to do on the first commit.
   useEffect(() => {
-    for (const { spot, flow } of initialSceneRef.current) {
+    for (const { spot, flow } of initialSceneRef.current ?? []) {
       placeStatically(flow.id, spot.at, spot.seat)
     }
     initialSceneRef.current = []
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /** Keeps a finished record in Athena's grid instead of deleting it,
-   * evicting the oldest once the grid is full. Seats are handed out in
-   * order and wrap at the same capacity, so the cell freed by an eviction
-   * is exactly the one the new arrival is about to take. */
+  /** Adds a finished record to Athena's grid, dropping whatever the
+   * grid evicted to make room for it. */
   function parkAtAthena(id: string) {
-    athenaParkedRef.current.push(id)
-    while (athenaParkedRef.current.length > ATHENA_CAPACITY) {
-      const evicted = athenaParkedRef.current.shift()
-      if (evicted) removeFlow(evicted)
-    }
+    for (const evicted of seating().parkAtAthena(id)) removeFlow(evicted)
   }
 
   /** Adds a flow to state and defers its first segment until React has
@@ -437,6 +527,7 @@ export function usePipelineAnimation() {
     // traffic they never opted into. Their own telemetry still runs when
     // they click for it, and that one is a deliberate action, not ambience.
     if (prefersReducedMotion()) return
+    if (pausedRef.current) return
     if (travelingRef.current >= MAX_TRAVELING) return
     const id = `flow-${idCounterRef.current++}`
     const outcome = forcedOutcome ?? pickAmbientOutcome()
@@ -520,6 +611,22 @@ export function usePipelineAnimation() {
   // The one thing a visitor sets off. It clears the whole backlog, not one
   // file, which is what redriving a queue actually does, and the files go
   // back unchanged: what got fixed is the parser.
+  /** Holds or releases the background traffic. Files already moving
+   * finish their current hop and settle at the next node, so a paused
+   * diagram is a still one rather than a frozen frame. */
+  function togglePaused() {
+    setPaused((wasPaused) => {
+      const nowPaused = !wasPaused
+      pausedRef.current = nowPaused
+      if (!nowPaused) {
+        const held = heldStepsRef.current
+        heldStepsRef.current = []
+        for (const step of held) step()
+      }
+      return nowPaused
+    })
+  }
+
   function redrive() {
     const held = flows.filter((flow) => flow.phase === 'in-dlq')
     if (held.length === 0) return
@@ -537,5 +644,18 @@ export function usePipelineAnimation() {
   const dlqCount = flows.filter((flow) => flow.phase === 'in-dlq').length
   const redriving = flows.some((flow) => flow.phase === 'traveling-redrive')
 
-  return { flows, dlqCount, redriving, registerToken, redrive }
+  // Reduced-motion visitors get the still-life scene and no ambient
+  // traffic, so there is nothing for a pause control to act on.
+  const canPause = !prefersReducedMotion()
+
+  return {
+    flows,
+    dlqCount,
+    redriving,
+    registerToken,
+    redrive,
+    paused,
+    togglePaused,
+    canPause,
+  }
 }

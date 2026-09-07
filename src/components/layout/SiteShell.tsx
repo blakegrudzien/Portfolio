@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router'
-import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useRouteMeta } from '../../hooks/useRouteMeta'
 import { Footer } from './Footer'
 import { NavBar } from './NavBar'
 import styles from './SiteShell.module.css'
 
 export function SiteShell() {
-  useDocumentTitle()
+  useRouteMeta()
 
   return (
     <div className={styles.shell}>

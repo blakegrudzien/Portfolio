@@ -33,9 +33,9 @@ export function HomePage() {
       </div>
 
       <p className={`prose ${styles.intro}`}>
-        I'm a recent CS graduate out of Emory University (May 2026) based in the
-        Bay Area. I have two completed software engineering internships, each at
-        startups, focusing on backend and data engineering.
+        I'm a recent CS graduate from Emory, May 2026. Both of my software
+        engineering internships were at startups, building backend services and
+        data pipelines. I'm looking for backend, platform, and data roles.
       </p>
 
       <p className={styles.work}>

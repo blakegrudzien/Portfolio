@@ -27,8 +27,16 @@ function nodeAccessibleLabel(node: DiagramNode): string {
 const slackNode = getNode('slack')
 
 export function PipelineDiagram() {
-  const { flows, dlqCount, redriving, registerToken, redrive } =
-    usePipelineAnimation()
+  const {
+    flows,
+    dlqCount,
+    redriving,
+    registerToken,
+    redrive,
+    paused,
+    togglePaused,
+    canPause,
+  } = usePipelineAnimation()
   const [showRegions, setShowRegions] = useState(false)
   const [activeInfoId, setActiveInfoId] = useState<NodeId | null>(null)
 
@@ -347,6 +355,15 @@ export function PipelineDiagram() {
             >
               Redrive the DLQ
             </button>
+            {canPause && (
+              <button
+                type="button"
+                className={styles.quietButton}
+                onClick={togglePaused}
+              >
+                {paused ? 'Resume' : 'Pause'} the animation
+              </button>
+            )}
           </div>
         </div>
       </div>

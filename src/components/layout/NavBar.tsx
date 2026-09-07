@@ -12,7 +12,7 @@ import styles from './NavBar.module.css'
 //
 // Lab is deliberately absent. One marble-weighing puzzle doesn't carry the
 // same weight as a case study, and giving it a top-level tab said it did.
-// The page still exists at /lab and About links to it.
+// The page still exists at /lab, linked from the home page.
 const navItems: { to: string; label: string; end?: boolean }[] = [
   // `end`, or "/" would match every route and Home would always look active.
   { to: paths.home, label: 'Home', end: true },

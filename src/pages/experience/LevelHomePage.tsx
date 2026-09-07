@@ -12,10 +12,10 @@ export function LevelHomePage() {
     >
       <CaseStudySection heading="The problem">
         <p>
-          I built this during an in-person internship at Level Home, a then
-          recently acquired company in Redwood City that made smart locks and
-          video doorbells. These devices constantly emitted telemetry, logs of
-          what the device just did, that the company's firmware team used to
+          I built this during an in-person internship at Level Home, a recently
+          acquired company in Redwood City that made smart locks and video
+          doorbells. These devices constantly emitted telemetry, logs of what
+          the device just did, that the company's firmware team used to
           troubleshoot bugs and catch issues before customers did.
         </p>
         <p>
