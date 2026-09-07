@@ -1,4 +1,13 @@
+/* The two type sizes in the diagram, named here so they can be retuned in
+   one place. Both sit below the type scale's 12px floor (--text-xs), which
+   is why they aren't tokens: they are lettering inside an illustration,
+   sized against the artwork rather than against body copy, and pulling the
+   global scale down to reach them would affect real text everywhere else.
+   The exception is recorded in tokens.css next to the rule it breaks. */
 .container {
+  --diagram-label-size: 13px;
+  --diagram-badge-size: 11px;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -118,7 +127,7 @@
    type laid over it. */
 .nodeLabel {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--diagram-label-size);
   fill: var(--color-ink);
   text-anchor: middle;
 }
@@ -266,21 +275,21 @@
   color: var(--color-ink);
 }
 
-/* Slack's unread badge, in Slack's own red. See pipelineGlyphs for why
-   those four brand hues live outside tokens.css. The ring around it is the
-   page background rather than a border color, so the badge reads as
-   sitting on top of the mark instead of being part of it. */
+/* Slack's unread badge. Its fill is set on the element from SLACK_BRAND in
+   pipelineGlyphs, the same constant the logo's paths use, so the brand red
+   is defined once. The ring around it is the page background rather than a
+   border color, so the badge reads as sitting on top of the mark instead
+   of being part of it. */
 .slackBadge circle {
-  fill: #e01e5a;
   stroke: var(--color-bg);
   stroke-width: 2;
 }
 
 .slackBadge text {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--diagram-badge-size);
   font-weight: 500;
-  fill: #ffffff;
+  fill: var(--color-on-accent);
   text-anchor: middle;
   dominant-baseline: middle;
 }

@@ -1,5 +1,6 @@
 import styles from './PipelineDiagram.module.css'
 import type { NodeId } from './pipelineData'
+import { SLACK_BRAND } from './slackBrand'
 
 // The node artwork. Each glyph draws in its own coordinate space centered
 // on (0, 0), since the parent <g> places it, so a node can be moved in NODES
@@ -207,45 +208,41 @@ function Dlq() {
 }
 
 function Slack() {
-  // The official Slack mark, in Slack's own colors. Its four brand hues
-  // are the only colors in this project that aren't derived from the
-  // three design tokens. They're deliberately declared here, next to the
-  // artwork, rather than in tokens.css: they belong to somebody else's
-  // brand and are not part of this site's palette. Drawn from the real
-  // eight-path geometry (a 122.8-unit square) rather than approximated,
-  // then scaled to a 44px mark.
+  // The official Slack mark, drawn from the real eight-path geometry (a
+  // 122.8-unit square) rather than approximated, then scaled to a 44px
+  // mark.
   return (
     <g transform="translate(-22, -22) scale(0.3583)">
       <path
-        fill="#E01E5A"
+        fill={SLACK_BRAND.rose}
         d="M 25.8,77.6 c0,7.1 -5.8,12.9 -12.9,12.9 S0,84.7 0,77.6 s5.8,-12.9 12.9,-12.9 h12.9 V77.6z"
       />
       <path
-        fill="#E01E5A"
+        fill={SLACK_BRAND.rose}
         d="M 32.3,77.6 c0,-7.1 5.8,-12.9 12.9,-12.9 s12.9,5.8 12.9,12.9 v32.3 c0,7.1 -5.8,12.9 -12.9,12.9 s-12.9,-5.8 -12.9,-12.9 V77.6z"
       />
       <path
-        fill="#36C5F0"
+        fill={SLACK_BRAND.blue}
         d="M 45.2,25.8 c-7.1,0 -12.9,-5.8 -12.9,-12.9 S38.1,0 45.2,0 s12.9,5.8 12.9,12.9 v12.9 H45.2z"
       />
       <path
-        fill="#36C5F0"
+        fill={SLACK_BRAND.blue}
         d="M 45.2,32.3 c7.1,0 12.9,5.8 12.9,12.9 s-5.8,12.9 -12.9,12.9 H12.9 C5.8,58.1 0,52.3 0,45.2 s5.8,-12.9 12.9,-12.9 H45.2z"
       />
       <path
-        fill="#2EB67D"
+        fill={SLACK_BRAND.green}
         d="M 97,45.2 c0,-7.1 5.8,-12.9 12.9,-12.9 s12.9,5.8 12.9,12.9 s-5.8,12.9 -12.9,12.9 H97 V45.2z"
       />
       <path
-        fill="#2EB67D"
+        fill={SLACK_BRAND.green}
         d="M 90.5,45.2 c0,7.1 -5.8,12.9 -12.9,12.9 s-12.9,-5.8 -12.9,-12.9 V12.9 C64.7,5.8 70.5,0 77.6,0 s12.9,5.8 12.9,12.9 V45.2z"
       />
       <path
-        fill="#ECB22E"
+        fill={SLACK_BRAND.yellow}
         d="M 77.6,97 c7.1,0 12.9,5.8 12.9,12.9 s-5.8,12.9 -12.9,12.9 s-12.9,-5.8 -12.9,-12.9 V97 H77.6z"
       />
       <path
-        fill="#ECB22E"
+        fill={SLACK_BRAND.yellow}
         d="M 77.6,90.5 c-7.1,0 -12.9,-5.8 -12.9,-12.9 s5.8,-12.9 12.9,-12.9 h32.3 c7.1,0 12.9,5.8 12.9,12.9 s-5.8,12.9 -12.9,12.9 H77.6z"
       />
     </g>

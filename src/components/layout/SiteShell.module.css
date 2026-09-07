@@ -4,6 +4,14 @@
   min-height: 100svh;
 }
 
+/* No focus ring on the main landmark. It is only ever focused
+   programmatically, by the skip link or by a navigation, never by tabbing
+   to it, and outlining the entire page area reads as a rendering fault
+   rather than as feedback. The change of content is the feedback. */
+.content:focus {
+  outline: none;
+}
+
 .content {
   flex: 1;
 }

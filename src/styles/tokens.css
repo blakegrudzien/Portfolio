@@ -37,7 +37,14 @@
 
   /* Type scale: roughly modular (~1.25-1.3 steps), rounded to clean rem
      values. Nothing outside this file references raw font-size values, so
-     the whole scale can be retuned from here without touching components. */
+     the whole scale can be retuned from here without touching components.
+
+     One documented exception: the Level Home diagram's labels and its
+     Slack badge sit below --text-xs, because they are lettering inside an
+     illustration rather than text on the page. They are named in
+     PipelineDiagram.module.css (--diagram-label-size, --diagram-badge-size)
+     rather than left as bare numbers, so they are still retunable in one
+     place. Nothing else may do this. */
   --text-xs: 0.75rem; /* 12px: captions, fine print */
   --text-sm: 0.875rem; /* 14px: nav labels, small UI text */
   --text-base: 1rem; /* 16px: body copy */

@@ -57,7 +57,7 @@ export type Trigger = 'success' | 'failure' | 'redrive'
  * whether the failure pathway gets demonstrated at all: see the seeded
  * failure in usePipelineAnimation for why that can't be left to a die
  * roll. */
-export const AMBIENT_FAILURE_RATE = 0.15
+const AMBIENT_FAILURE_RATE = 0.15
 
 /** A device emits several discrete readings, not one file. The file is
  * something the condenser makes. These are the offsets those readings ride

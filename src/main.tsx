@@ -14,7 +14,16 @@ import '@fontsource/ibm-plex-mono/latin-500.css'
 import { App } from './App.tsx'
 import './styles/base.css'
 
-createRoot(document.getElementById('root')!).render(
+// index.html always carries this div, so its absence means the HTML and
+// this entry point have gone out of sync. Throwing says that; the `!` this
+// replaces would have surfaced it as "Cannot read properties of null" from
+// somewhere inside React instead.
+const rootElement = document.getElementById('root')
+if (!rootElement) {
+  throw new Error('No #root element found: index.html and main.tsx disagree.')
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>,

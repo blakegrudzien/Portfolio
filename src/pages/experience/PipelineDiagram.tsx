@@ -14,6 +14,7 @@ import {
 } from './pipelineData'
 import { payloadStage } from './pipelineFlow'
 import { NodeGlyph } from './pipelineGlyphs'
+import { SLACK_BRAND } from './slackBrand'
 import { usePipelineAnimation } from './usePipelineAnimation'
 
 function nodeAccessibleLabel(node: DiagramNode): string {
@@ -195,7 +196,7 @@ export function PipelineDiagram() {
                 transform={`translate(${slackNode.x + 20}, ${slackNode.y - 20})`}
                 aria-hidden="true"
               >
-                <circle r={9} />
+                <circle r={9} fill={SLACK_BRAND.rose} />
                 <text y={0.5}>{dlqCount}</text>
               </g>
             )}

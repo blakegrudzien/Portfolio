@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, type RouteObject } from 'react-router'
 import { SiteShell } from '../components/layout/SiteShell'
 import { LevelHomePage } from '../pages/experience/LevelHomePage'
 import { HomePage } from '../pages/home/HomePage'
@@ -19,7 +19,10 @@ function handleFor(path: string) {
   return { meta }
 }
 
-export const router = createBrowserRouter([
+/** The route table, separate from the browser router built from it, so
+ * tests can mount the real routes in a memory router rather than asserting
+ * against a second copy that could drift from this one. */
+export const routes: RouteObject[] = [
   {
     element: <SiteShell />,
     // Catches a failure in the shell itself, where there is no nav left to
@@ -81,4 +84,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+]
+
+export const router = createBrowserRouter(routes)
