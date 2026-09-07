@@ -8,8 +8,22 @@
       name="description"
       content="Portfolio of Blake Grudzien. Emory CS, graduated May 2026, working in backend, platform, and data engineering in the Bay Area."
     />
+    <link rel="canonical" href="https://blakegrudzien.com/" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://blakegrudzien.com/" />
     <meta property="og:title" content="Blake Grudzien" />
+    <!-- Absolute URL on purpose: LinkedIn and Slack resolve og:image against
+         their own host, not the page's, so a relative path silently yields a
+         card with no image. JPEG rather than WebP for the same reason, since
+         crawler support for WebP is still uneven. -->
+    <meta property="og:image" content="https://blakegrudzien.com/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Blake Grudzien. Bay Area, backend, platform and data engineering."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta
       property="og:description"
       content="Portfolio of Blake Grudzien. Emory CS, graduated May 2026, working in backend, platform, and data engineering in the Bay Area."

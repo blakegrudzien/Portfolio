@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // Committed rather than left to Wrangler's interactive setup, which
+  // regenerates it on every build. Deploy config for a URL that goes on a
+  // resume should be in version control, not inferred each time.
+  "name": "portfolio",
+  "compatibility_date": "2026-09-03",
+  "assets": {
+    "directory": "./dist",
+    // React Router owns every path, so anything that isn't a real file has
+    // to return index.html with a 200. This is the Workers equivalent of a
+    // Pages _redirects rule; without it, a direct hit on
+    // /projects/chess-scholar is a genuine 404.
+    "not_found_handling": "single-page-application",
+  },
+  "observability": { "enabled": true },
+}
