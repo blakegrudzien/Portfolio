@@ -11,7 +11,14 @@
     // to return index.html with a 200. This is the Workers equivalent of a
     // Pages _redirects rule; without it, a direct hit on
     // /projects/chess-scholar is a genuine 404.
-    "not_found_handling": "single-page-application",
+    "not_found_handling": "single-page-application"
   },
-  "observability": { "enabled": true },
+  // The custom domain is live and verified, so the site has one canonical
+  // address. Leaving workers.dev enabled would publish a second, identical
+  // one, which is the sort of stray URL that ends up shared by accident.
+  "workers_dev": false,
+  // Set explicitly only to silence the "not in your Wrangler file" warning.
+  // Branch previews stay on; they're useful before pushing to main.
+  "preview_urls": true,
+  "observability": { "enabled": true }
 }

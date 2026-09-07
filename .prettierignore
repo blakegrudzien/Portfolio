@@ -1,2 +1,6 @@
 dist
 coverage
+
+# Wrangler parses this itself; Prettier formats .jsonc with trailing
+# commas, which is legal JSONC but needless risk in deploy config.
+wrangler.jsonc
