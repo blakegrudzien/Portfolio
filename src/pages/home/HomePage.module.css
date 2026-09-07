@@ -17,18 +17,20 @@
   gap: var(--space-5);
 }
 
-.photo,
+/* The photo carries its own elliptical mask, so it sets a height and keeps
+   its own aspect ratio. The placeholder is square, since it only stands in
+   for a missing file and never ships. */
+.photo {
+  flex: 0 0 auto;
+  height: 10rem;
+  width: auto;
+}
+
 .photoPlaceholder {
   flex: 0 0 auto;
   width: 10rem;
   height: 10rem;
-  /* Circular: the source is a square headshot, and a circle keeps the
-     crop from reading as a rectangle of wall behind a head. */
-  border-radius: 50%;
-}
-
-.photo {
-  object-fit: cover;
+  border-radius: var(--radius-md);
 }
 
 .photoPlaceholder {

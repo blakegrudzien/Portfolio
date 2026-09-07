@@ -3,8 +3,8 @@ import { paths } from '../../routes/paths'
 import styles from './HomePage.module.css'
 
 /**
- * Cropped square, so it can be rendered as a circle without cutting into
- * the face. Served at 400px for a 160px slot, which covers 2x displays.
+ * The ellipse mask is baked into the image, so no border-radius is applied
+ * in CSS. Served at 400px tall for a 160px slot, covering 2x displays.
  */
 const PHOTO_SRC = '/headshot.webp'
 
@@ -17,7 +17,7 @@ export function HomePage() {
             className={styles.photo}
             src={PHOTO_SRC}
             alt="Blake Grudzien"
-            width={400}
+            width={345}
             height={400}
           />
         ) : (
