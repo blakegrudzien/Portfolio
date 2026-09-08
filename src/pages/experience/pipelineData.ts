@@ -114,7 +114,7 @@ export const NODE_INFO: Record<
 > = {
   device: {
     context:
-      "Level Home's smart locks, and video doorbells emit telemetry as they operate.",
+      "Level Home's smart locks and video doorbells emit telemetry as they operate.",
     payload: {
       label: 'Separate readings',
       lines: [

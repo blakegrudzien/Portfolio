@@ -24,6 +24,11 @@ export function Footer() {
               LinkedIn
             </a>
           </li>
+          <li>
+            <a href={contact.github} target="_blank" rel="noreferrer">
+              GitHub
+            </a>
+          </li>
         </ul>
         <p className={styles.meta}>
           © {new Date().getFullYear()} Blake Grudzien ·{' '}
