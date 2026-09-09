@@ -56,5 +56,5 @@ export const RESUME_PDF_SHA256 =
   '$HASH'
 TS
 
-echo "wrote $OUT ($(du -h "$OUT" | cut -f1), ${WIDTH}x${HEIGHT})"
+echo "wrote $OUT ($(ls -l "$OUT" | awk '{printf "%.0f KB", $5/1024}'), ${WIDTH}x${HEIGHT})"
 echo "wrote $CONST"
