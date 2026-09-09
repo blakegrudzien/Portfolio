@@ -1,13 +1,21 @@
+import { hypothesisState } from '../logic/puzzle'
 import { MARBLE_COUNT } from '../logic/types'
-import type { MarbleId, PanAssignment, PossibilitySpace } from '../logic/types'
+import type {
+  HypothesisState,
+  MarbleId,
+  PanAssignment,
+  PossibilitySpace,
+} from '../logic/types'
 import { cx } from '../../../utils/cx'
 import styles from './MarbleTray.module.css'
 
 interface MarbleTrayProps {
   assignment: PanAssignment
   possibilitySpace: PossibilitySpace
-  /** Easy mode: fade out marbles that have been fully ruled out. */
-  showEliminated: boolean
+  /** Easy mode: show what the weighings so far have settled about each
+   * marble. Ruled-out marbles fade, and a marble that can only be the
+   * heavy one or only the light one is tinted and badged. */
+  showHints: boolean
   disabled: boolean
   onToggle: (marbleId: MarbleId) => void
 }
@@ -18,10 +26,19 @@ function describeAssignment(assignment: PanAssignment, marbleId: MarbleId) {
   return 'not on the scale'
 }
 
+/** Spoken form of each hint. The tint and the badge are visual only, so
+ * without these the whole of easy mode would be invisible to a screen
+ * reader. */
+const HINT_LABEL: Record<Exclude<HypothesisState, 'unknown'>, string> = {
+  'ruled-out': 'ruled out',
+  'must-be-heavier': 'if it is the odd one, it is heavier',
+  'must-be-lighter': 'if it is the odd one, it is lighter',
+}
+
 export function MarbleTray({
   assignment,
   possibilitySpace,
-  showEliminated,
+  showHints,
   disabled,
   onToggle,
 }: MarbleTrayProps) {
@@ -30,13 +47,17 @@ export function MarbleTray({
       <legend className="visually-hidden">Marbles</legend>
       {Array.from({ length: MARBLE_COUNT }, (_, marbleId) => {
         const hypothesis = possibilitySpace.find((h) => h.marbleId === marbleId)
-        const isEliminated =
-          showEliminated &&
-          hypothesis !== undefined &&
-          !hypothesis.possibleAsHeavier &&
-          !hypothesis.possibleAsLighter
+        const hint =
+          showHints && hypothesis ? hypothesisState(hypothesis) : 'unknown'
         const onLeft = assignment.left.includes(marbleId)
         const onRight = assignment.right.includes(marbleId)
+        const label = [
+          `Marble ${marbleId + 1}`,
+          describeAssignment(assignment, marbleId),
+          hint === 'unknown' ? null : HINT_LABEL[hint],
+        ]
+          .filter(Boolean)
+          .join(', ')
 
         return (
           <button
@@ -48,9 +69,11 @@ export function MarbleTray({
               styles.marble,
               onLeft && styles.onLeft,
               onRight && styles.onRight,
-              isEliminated && styles.eliminated,
+              hint === 'ruled-out' && styles.eliminated,
+              hint === 'must-be-heavier' && styles.heavier,
+              hint === 'must-be-lighter' && styles.lighter,
             )}
-            aria-label={`Marble ${marbleId + 1}, ${describeAssignment(assignment, marbleId)}`}
+            aria-label={label}
           >
             {marbleId + 1}
           </button>

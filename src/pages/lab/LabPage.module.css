@@ -17,3 +17,24 @@
   margin-bottom: var(--space-6);
   text-align: left;
 }
+
+.notes {
+  align-self: flex-start;
+  max-width: 68ch;
+  margin-top: var(--space-8);
+  text-align: left;
+}
+
+.notes h2 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-3);
+}
+
+.notes p + p {
+  margin-top: var(--space-4);
+}
+
+.notes p {
+  line-height: var(--leading-normal);
+  color: var(--color-ink-muted);
+}

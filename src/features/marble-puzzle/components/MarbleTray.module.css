@@ -47,18 +47,24 @@
 }
 
 .onLeft::after,
-.onRight::after {
+.onRight::after,
+.heavier::before,
+.lighter::before {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
   background: var(--color-bg);
   border: 1px solid var(--color-border);
   font-size: 0.6rem;
-  line-height: 1.1rem;
+  line-height: 1rem;
   color: var(--color-ink);
+}
+
+.onLeft::after,
+.onRight::after {
+  bottom: -2px;
+  right: -2px;
 }
 
 .onLeft::after {
@@ -80,4 +86,44 @@
    this exact marble via its aria-label. */
 .eliminated:focus-visible {
   opacity: 1;
+}
+
+/* Easy-mode deductions. A marble that can only be the heavy one, or only
+   the light one, gets a tint you can read at a glance plus a badge that
+   says the same thing without relying on color.
+   
+   The badge sits in the top corner because the bottom one already carries
+   the L/R pan marker, and a marble can be both on a pan and narrowed down
+   at the same time. The tint is skipped for marbles on a pan, where the
+   solid accent or ink fill is already doing the talking. */
+.heavier:not(.onLeft):not(.onRight) {
+  background: var(--color-heavier-tint);
+  border-color: var(--color-heavier);
+}
+
+.lighter:not(.onLeft):not(.onRight) {
+  background: var(--color-lighter-tint);
+  border-color: var(--color-lighter);
+}
+
+.heavier::before,
+.lighter::before {
+  top: -2px;
+  right: -2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.heavier::before {
+  content: '+';
+  color: var(--color-heavier);
+  border-color: var(--color-heavier);
+}
+
+.lighter::before {
+  /* U+2212 minus sign, not a hyphen: it matches the plus in weight and
+     width, and a hyphen reads as a dash at this size. */
+  content: '\2212';
+  color: var(--color-lighter);
+  border-color: var(--color-lighter);
 }

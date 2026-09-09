@@ -3,6 +3,8 @@ import {
   MAX_WEIGHINGS,
   type FinalAnswer,
   type GuessOutcome,
+  type HypothesisState,
+  type MarbleHypothesis,
   type MarbleId,
   type Pan,
   type PanAssignment,
@@ -35,6 +37,17 @@ export function createInitialPossibilitySpace(): PossibilitySpace {
     possibleAsHeavier: true,
     possibleAsLighter: true,
   }))
+}
+
+/** Collapses a hypothesis into the state easy mode displays. Lives here
+ * rather than in the component so the rule is unit tested rather than
+ * inferred from a stylesheet. */
+export function hypothesisState(hypothesis: MarbleHypothesis): HypothesisState {
+  const { possibleAsHeavier, possibleAsLighter } = hypothesis
+  if (!possibleAsHeavier && !possibleAsLighter) return 'ruled-out'
+  if (possibleAsHeavier && !possibleAsLighter) return 'must-be-heavier'
+  if (!possibleAsHeavier && possibleAsLighter) return 'must-be-lighter'
+  return 'unknown'
 }
 
 /** Drops any (marble, direction) hypothesis that wouldn't have produced

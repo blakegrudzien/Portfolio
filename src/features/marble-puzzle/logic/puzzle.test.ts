@@ -5,6 +5,7 @@ import {
   submitFinalAnswer,
   submitWeighing,
   toggleMarblePan,
+  hypothesisState,
 } from './puzzle'
 import type { PuzzleSolution, PuzzleState, Weighing } from './types'
 
@@ -222,5 +223,35 @@ describe('a full three-weighing game', () => {
 
     const result = submitFinalAnswer(state, 5, 'heavier')
     expect(result.finalAnswer?.outcome).toBe('correct-deduced')
+  })
+})
+
+describe('hypothesisState', () => {
+  const h = (heavier: boolean, lighter: boolean) => ({
+    marbleId: 0,
+    possibleAsHeavier: heavier,
+    possibleAsLighter: lighter,
+  })
+
+  it('is unknown while both directions are still open', () => {
+    expect(hypothesisState(h(true, true))).toBe('unknown')
+  })
+
+  it('is ruled out once neither direction is possible', () => {
+    expect(hypothesisState(h(false, false))).toBe('ruled-out')
+  })
+
+  // "must-be-heavier" is a claim about direction, not about guilt: the
+  // marble may well be perfectly ordinary. It only says that if this is
+  // the odd one, it is the heavy one.
+  it('settles the direction when only one remains', () => {
+    expect(hypothesisState(h(true, false))).toBe('must-be-heavier')
+    expect(hypothesisState(h(false, true))).toBe('must-be-lighter')
+  })
+
+  it('matches every marble in a fresh puzzle, where nothing is known yet', () => {
+    for (const hypothesis of createInitialPossibilitySpace()) {
+      expect(hypothesisState(hypothesis)).toBe('unknown')
+    }
   })
 })

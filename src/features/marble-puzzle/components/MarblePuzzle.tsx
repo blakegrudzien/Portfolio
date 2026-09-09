@@ -100,7 +100,7 @@ export function MarblePuzzle() {
             checked={mode === 'easy'}
             onChange={() => setMode('easy')}
           />
-          Easy: fade out ruled-out marbles
+          Easy: show what each weighing rules out
         </label>
       </div>
 
@@ -115,7 +115,7 @@ export function MarblePuzzle() {
       <MarbleTray
         assignment={state.currentAssignment}
         possibilitySpace={state.possibilitySpace}
-        showEliminated={mode === 'easy'}
+        showHints={mode === 'easy'}
         disabled={!canWeighMore}
         onToggle={(marbleId) => dispatch({ type: 'TOGGLE_MARBLE', marbleId })}
       />

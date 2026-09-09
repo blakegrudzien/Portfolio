@@ -13,6 +13,22 @@ export function LabPage() {
         click again to take it off.
       </p>
       <MarblePuzzle />
+
+      {/* Below the puzzle on purpose. Someone who came here to play should
+      reach the scale without reading a history first. */}
+      <section className={styles.notes}>
+        <p>
+          My dad first introduced this puzzle to me on a roadtrip when I was about 9.
+          I recently found out its roots trace all the way back to WW2.
+          I really like it and wanted to make a simple interactive version of it.  
+          
+        </p>
+        <p>
+          This can be done without any guessing, and it can tell if you 
+          just got lucky or actually narrowed it down to one marble.
+
+        </p>
+      </section>
     </div>
   )
 }

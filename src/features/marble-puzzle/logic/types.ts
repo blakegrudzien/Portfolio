@@ -29,6 +29,12 @@ export interface MarbleHypothesis {
 /** Indexed by marbleId; always has exactly MARBLE_COUNT entries. */
 export type PossibilitySpace = MarbleHypothesis[]
 
+/** What the weighings so far have settled about one marble.
+ * 'must-be-heavier' does not mean the marble IS the odd one, only that if
+ * it is, it is the heavy one; the other direction has been ruled out. */
+export type HypothesisState =
+  'unknown' | 'must-be-heavier' | 'must-be-lighter' | 'ruled-out'
+
 export type GuessOutcome = 'correct-deduced' | 'correct-lucky' | 'incorrect'
 
 export interface FinalAnswer {

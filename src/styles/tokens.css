@@ -27,6 +27,27 @@
      filled-accent surface (buttons, CTAs) reads it from one place instead
      of each component hand-picking the literal keyword. */
   --color-on-accent: #fff;
+
+  /* Marble puzzle deductions: the only hues in this file beyond the three
+     above. Easy mode has to show a two-directional state (this marble can
+     only be the heavy one / can only be the light one) and a one-accent
+     palette has no second hue to say that with. Verified on --color-bg:
+       heavier on bg   7.27:1  (AAA)
+       lighter on bg   7.43:1  (AAA)
+     Never the only carrier of the meaning: each marble also gets a + or -
+     badge, so the distinction survives without color. */
+  --color-heavier: #992d2d;
+  --color-lighter: #2a5580;
+  --color-heavier-tint: color-mix(
+    in srgb,
+    var(--color-heavier) 12%,
+    var(--color-bg)
+  );
+  --color-lighter-tint: color-mix(
+    in srgb,
+    var(--color-lighter) 12%,
+    var(--color-bg)
+  );
   --color-accent-hover: color-mix(in srgb, var(--color-accent) 85%, black);
 
   /* Type: Zilla Slab for headings, IBM Plex Sans for body/UI,
