@@ -26,11 +26,26 @@ npm run format       # prettier --write
 npm run build        # typecheck + production build
 ```
 
+### Replacing the resume
+
+`/resume` shows the PDF as an image, because a browser's built-in PDF viewer
+wraps the page in its own grey background and toolbar that took up more room
+than the resume did. That means there are two artifacts, so after dropping a
+new `public/Blake_Grudzien_Resume.pdf` in place, run:
+
+```bash
+npm run resume:preview   # needs: brew install poppler webp
+```
+
+It re-renders the image and records which PDF it came from. If you forget,
+`resumePreview.node.test.ts` fails and tells you to run it, rather than the
+site quietly showing an outdated resume next to a current download link.
+
 ## A couple of design decisions worth naming
 
 - **Direct-render-now, index-later routing.** `/projects` and `/projects/chess-scholar` currently render the same page, since there's only one project; `/experience` and `/experience/level-home` likewise. Adding a second entry later is a one-line swap of the index route's element, and the specific case-study routes and their URLs don't move.
 - **No About page.** It existed, and its content moved onto the home page instead. Three paragraphs did not justify a route of their own, and a page nobody maintains is worse than one that doesn't exist. The home page carries the same material and reads as a single-page personal site.
-- **The marble puzzle lives at `/lab` but isn't in the nav.** One puzzle doesn't carry the weight of a case study, and giving it a top-level tab implied it did. The home page links to it in passing.
+- **The marble puzzle has its own `/lab` tab.** It was originally left out of the nav, on the grounds that one puzzle doesn't carry a case study's weight. That reasoning was about credibility, and the puzzle isn't competing on credibility: it's the one page here that shows curiosity rather than competence, and as a single line at the bottom of the home page it went unread.
 - **No data-driven "sections" abstraction for case studies.** With two case studies, a generic content schema would be premature, so page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess Scholar page.
 - **Every route's title and description come from one table** (`src/routes/routeMeta.ts`). The router hangs each entry on its route, a hook applies the current one on navigation, and a build step writes a static HTML file per route carrying the same tags. That last part is what makes a shared case-study link unfurl as the case study: link previews read the HTML they are served and never run the bundle, so setting the tags at runtime alone would leave every shared URL showing the home page's card.
 - **The Level Home pipeline diagram's animation state is split into pure data/logic and DOM-driving code** (`pipelineData.ts`, `pipelineFlow.ts`, `pipelineSeating.ts`, `usePipelineAnimation.ts`) specifically so the parts that can be checked without a browser are, meaning the geometry, the sequencing, and the seating rules. Only `usePipelineAnimation.ts` touches the DOM; everything it decides is decided in one of the other three and unit tested there.

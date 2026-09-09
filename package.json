@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "test": "vitest",
     "test:run": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "resume:preview": "bash scripts/build-resume-preview.sh"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.3.0",

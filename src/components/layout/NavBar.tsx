@@ -10,14 +10,18 @@ import styles from './NavBar.module.css'
 // are separated across the bar, and the redundancy is worth more than the
 // tidiness of having exactly one route home.
 //
-// Lab is deliberately absent. One marble-weighing puzzle doesn't carry the
-// same weight as a case study, and giving it a top-level tab said it did.
-// The page still exists at /lab, linked from the home page.
+// Lab was left out at first, on the grounds that one marble-weighing puzzle
+// doesn't carry a case study's weight and a top-level tab would say it did.
+// That was answering a different question. It isn't competing with the case
+// studies on credibility; it's the one thing here that shows curiosity
+// rather than competence, and buried in an aside at the bottom of the home
+// page almost nobody found it.
 const navItems: { to: string; label: string; end?: boolean }[] = [
   // `end`, or "/" would match every route and Home would always look active.
   { to: paths.home, label: 'Home', end: true },
   { to: paths.experience, label: 'Experience' },
   { to: paths.projects, label: 'Projects' },
+  { to: paths.lab, label: 'Lab' },
   { to: paths.resume, label: 'Resume' },
 ]
 

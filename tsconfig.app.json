@@ -24,5 +24,9 @@
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  /* Tests that read files off disk are typechecked by tsconfig.node.json
+     instead, so this program stays browser-only and app code cannot import
+     node:fs and still typecheck. */
+  "exclude": ["src/**/*.node.test.ts"]
 }

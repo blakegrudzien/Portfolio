@@ -1,5 +1,8 @@
 .page {
-  max-width: 40rem;
+  /* Wider than the site's other text pages to fit the resume preview at a
+     legible size. Prose is capped at 68ch by .prose in base.css, so the
+     reading measure is unaffected by this. */
+  max-width: 52rem;
   margin: 0 auto;
   padding: var(--space-8) var(--space-5);
 }
@@ -17,4 +20,13 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 500;
+}
+
+.preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-7);
 }
