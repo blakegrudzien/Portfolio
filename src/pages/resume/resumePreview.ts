@@ -14,4 +14,4 @@ export const RESUME_PREVIEW = '/Blake_Grudzien_Resume.webp'
 export const RESUME_PREVIEW_WIDTH = 1700
 export const RESUME_PREVIEW_HEIGHT = 2200
 export const RESUME_PDF_SHA256 =
-  '0e5d1b555c385149981189ea3d9890726c1bbebe4a0256c2602e2cb91fd25557'
+  '62510bb3ef93642e4ccea5dfcd2b84e1dc075487661d7209b133f83e06d10089'

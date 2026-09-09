@@ -76,7 +76,7 @@ export function ChessScholarPage() {
     <CaseStudyShell
       kind="project"
       title="Chess Scholar"
-      tags={['Python', 'Postgres', 'RAG', 'Claude tool-calling']}
+      tags={['Python', 'PostgreSQL', 'RAG', 'Claude tool-calling']}
       links={links}
     >
       <CaseStudySection heading="The problem">
@@ -85,10 +85,10 @@ export function ChessScholarPage() {
           understand chess the way humans do. Attempts at AI coaching generally
           fall flat because they have to reverse engineer a human-readable
           explanation for a decision made without those ideas in mind. Chess
-          Scholar bypasses this by training a model on high-level annotations.
-          This way, the AI never tries to understand the game on its own and
-          instead supplies the user with relevant human commentary to explain
-          the reasoning behind a move.
+          Scholar bypasses this by retrieving high-level human annotations. This
+          way, the AI never tries to understand the game on its own and instead
+          supplies the user with relevant human commentary to explain the
+          reasoning behind a move.
         </p>
       </CaseStudySection>
 
@@ -148,7 +148,7 @@ export function ChessScholarPage() {
       <CaseStudySection heading="Tech stack">
         <p>
           Python · Claude Sonnet 5 (native tool calling) · Voyage AI voyage-4
-          embeddings · Postgres + pgvector (Neon) · Stockfish via python-chess
+          embeddings · PostgreSQL + pgvector (Neon) · Stockfish via python-chess
           (UCI) · Streamlit with a custom draggable board (wraps chessboard.js)
         </p>
       </CaseStudySection>
@@ -156,7 +156,7 @@ export function ChessScholarPage() {
       <CaseStudySection heading="Tests & CI">
         <p>
           235 tests, run in CI on Python 3.11 and 3.12 via GitHub Actions. Tests
-          that need a live Postgres connection skip themselves locally with a
+          that need a live PostgreSQL connection skip themselves locally with a
           clear reason printed, rather than failing or silently passing.
         </p>
       </CaseStudySection>
