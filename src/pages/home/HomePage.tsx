@@ -12,19 +12,13 @@ export function HomePage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        {PHOTO_SRC ? (
-          <img
-            className={styles.photo}
-            src={PHOTO_SRC}
-            alt="Blake Grudzien"
-            width={345}
-            height={400}
-          />
-        ) : (
-          <div className={styles.photoPlaceholder}>
-            <span>Photo</span>
-          </div>
-        )}
+        <img
+          className={styles.photo}
+          src={PHOTO_SRC}
+          alt="Blake Grudzien"
+          width={345}
+          height={400}
+        />
 
         <div className={styles.identity}>
           <h1>Blake Grudzien</h1>
