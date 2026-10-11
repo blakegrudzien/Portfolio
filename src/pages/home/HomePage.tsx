@@ -38,11 +38,29 @@ export function HomePage() {
         data pipelines. I'm looking for backend, platform, and data roles.
       </p>
 
-      <p className={styles.work}>
-        Written up in full:{' '}
-        <Link to={paths.projectChessScholar}>Chess Scholar</Link> ·{' '}
-        <Link to={paths.experienceLevelHome}>the Level Home pipeline</Link>
-      </p>
+      <h2 className={styles.workHeading}>Written up in full</h2>
+      <ul className={styles.work}>
+        <li>
+          <Link to={paths.experienceLevelHome} className={styles.workTitle}>
+            Level Home
+          </Link>
+          <p className={styles.workBlurb}>
+            Rebuilt a device telemetry pipeline in Go so failed files could be
+            fixed and retried instead of lost. Data loss went from over 30% to
+            under 1%.
+          </p>
+        </li>
+        <li>
+          <Link to={paths.projectChessScholar} className={styles.workTitle}>
+            Chess Scholar
+          </Link>
+          <p className={styles.workBlurb}>
+            A chess coach that answers from four backend sources: 127,435 games
+            in SQL, 468,862 chunks of annotated commentary in a vector index,
+            Stockfish for evaluation, and opening matching.
+          </p>
+        </li>
+      </ul>
 
       <aside className={styles.aside}>
         <p>
