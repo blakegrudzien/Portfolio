@@ -156,11 +156,6 @@
   opacity: 0.45;
 }
 
-.glyphMark {
-  fill: var(--color-ink-muted);
-  stroke: none;
-}
-
 /* Labels sit under the artwork rather than inside it, since there's no box to
    put them in anymore, and an illustration is easier to read without
    type laid over it. */
@@ -188,10 +183,6 @@
 
 .nodeInfoActive .hatchLine {
   stroke: var(--color-accent);
-}
-
-.nodeInfoActive .glyphMark {
-  fill: var(--color-accent);
 }
 
 /* Element opacity is driven imperatively as a token starts moving, so the

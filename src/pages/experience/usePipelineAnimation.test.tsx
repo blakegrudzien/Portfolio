@@ -35,6 +35,72 @@ function tokens(container: HTMLElement) {
   )
 }
 
+/** Drives document.hidden, which jsdom exposes as a getter with no setter,
+ * and raises the event the browser pairs with it. */
+function setTabHidden(hidden: boolean) {
+  Object.defineProperty(document, 'hidden', {
+    configurable: true,
+    get: () => hidden,
+  })
+  act(() => {
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+}
+
+describe('a tab nobody is looking at', () => {
+  afterEach(() => {
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      get: () => false,
+    })
+  })
+
+  it('spawns nothing while hidden, and starts when the tab is looked at', () => {
+    vi.useFakeTimers()
+    Object.defineProperty(document, 'hidden', {
+      configurable: true,
+      get: () => true,
+    })
+
+    const { container } = render(<PipelineDiagram />)
+    act(() => {
+      vi.advanceTimersByTime(60_000)
+    })
+
+    // A minute in the background. Nothing should have been spawned at all,
+    // seeded files included: a link opened in a background tab would
+    // otherwise burn its seeded failure off screen.
+    expect(tokens(container)).toHaveLength(0)
+
+    setTabHidden(false)
+    act(() => {
+      vi.advanceTimersByTime(10_000)
+    })
+
+    expect(tokens(container).length).toBeGreaterThan(0)
+  })
+
+  it('stops spawning again when the tab is left, without dropping what is on screen', () => {
+    vi.useFakeTimers()
+    const { container } = render(<PipelineDiagram />)
+    act(() => {
+      vi.advanceTimersByTime(30_000)
+    })
+    const whileWatching = tokens(container).length
+    expect(whileWatching).toBeGreaterThan(0)
+
+    setTabHidden(true)
+    act(() => {
+      vi.advanceTimersByTime(300_000)
+    })
+
+    // Five minutes away. Files in flight are left to finish and park, so
+    // the count can fall as Athena's grid evicts, but nothing new arrives,
+    // which is what used to fill the DLQ unwatched.
+    expect(tokens(container).length).toBeLessThanOrEqual(whileWatching)
+  })
+})
+
 describe('coming back to a backgrounded tab', () => {
   it('leaves parked files in their seats rather than at the node centre', () => {
     // Only timers are faked. A hidden tab keeps running them while it stops

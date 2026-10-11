@@ -537,6 +537,20 @@ export type Phase =
 // up, and whether a redrive is in flight. This is the only narration a
 // screen reader gets for a diagram whose content is otherwise motion, so
 // it says what changed rather than describing the animation.
+/** The pipeline's state in one line, shown under the diagram and announced
+ * to a screen reader when it changes.
+ *
+ * Deliberately carries no count, though the caller has one. This string
+ * drives an aria-live region, and the DLQ fills on its own every ten
+ * seconds or so for as long as the page is open, so a counted sentence
+ * re-announced itself on every arrival, indefinitely, with nothing a
+ * listener could do to stop it. That is the situation WCAG 2.2.2 is about.
+ *
+ * Phrased per state instead, it changes only when the pipeline does:
+ * healthy, backed up, or clearing. Three transitions in a typical visit
+ * rather than one every ten seconds. The number is still on screen, on
+ * Slack's badge, which is aria-hidden so it does not reintroduce this.
+ */
 export function pipelineStatus(dlqCount: number, redriving: boolean): string {
   if (redriving) {
     return 'Redriving the backlog through SQS to the parser.'
@@ -544,6 +558,5 @@ export function pipelineStatus(dlqCount: number, redriving: boolean): string {
   if (dlqCount === 0) {
     return 'Telemetry is flowing through the pipeline. Nothing is backed up.'
   }
-  const files = dlqCount === 1 ? '1 file' : `${dlqCount} files`
-  return `${files} failed to parse and ${dlqCount === 1 ? 'is' : 'are'} held in the DLQ. Redrive once the parser is fixed.`
+  return 'Files have failed to parse and are held in the DLQ. Redrive once the parser is fixed.'
 }

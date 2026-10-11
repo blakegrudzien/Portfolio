@@ -553,6 +553,11 @@ export function usePipelineAnimation() {
     // they click for it, and that one is a deliberate action, not ambience.
     if (prefersReducedMotion()) return
     if (pausedRef.current) return
+    // Nothing is spawned into a tab nobody is looking at. The loop below
+    // already stops itself on visibilitychange; this is the backstop for
+    // the cases that never raise one, such as mounting in a tab that was
+    // already in the background.
+    if (document.hidden) return
     if (travelingRef.current >= MAX_TRAVELING) return
     const id = `flow-${idCounterRef.current++}`
     const outcome = forcedOutcome ?? pickAmbientOutcome()
@@ -615,17 +620,66 @@ export function usePipelineAnimation() {
     // of a visit. That's too much of the diagram's argument to leave to
     // chance. It's seeded second, so the first thing a visitor sees is
     // still an ordinary file going through.
-    const seeded: ('success' | 'failure')[] = ['success', 'failure', 'success']
-    seeded.forEach((outcome, i) => {
-      window.setTimeout(() => {
-        if (!cancelled) spawnRef.current(outcome)
-      }, i * 400)
-    })
+    // Deferred until the tab is actually looked at, rather than fired on
+    // mount: a link opened in a background tab would otherwise spend its
+    // seeded files, the guaranteed failure included, while the diagram was
+    // not on screen, and the visitor would arrive at the empty start this
+    // exists to prevent.
+    let hasSeeded = false
+    function seed() {
+      if (hasSeeded) return
+      hasSeeded = true
+      const seeded: ('success' | 'failure')[] = [
+        'success',
+        'failure',
+        'success',
+      ]
+      seeded.forEach((outcome, i) => {
+        window.setTimeout(() => {
+          if (!cancelled) spawnRef.current(outcome)
+        }, i * 400)
+      })
+    }
 
-    queueNextSpawn()
+    function stopSpawning() {
+      window.clearTimeout(timeoutId)
+      timeoutId = 0
+    }
+
+    /* A hidden tab keeps running timers while the browser stops drawing it
+       and stops servicing requestAnimationFrame, so left alone this loop
+       spends a visit in another tab filling the DLQ with files nobody
+       watched arrive. The visitor then comes back to a full bin and a
+       badge reading 9+, which is the opposite of the point: the argument
+       the diagram makes is that a backlog builds up while you watch.
+
+       Not the same thing as the Pause button, which is for someone who is
+       looking and would rather it stopped. There is no impression to
+       preserve in a tab that is not on screen, so this needs no control
+       and reports nothing. Files already in flight are left to finish and
+       park; only new arrivals stop. */
+    function onVisibilityChange() {
+      if (cancelled) return
+      if (document.hidden) {
+        stopSpawning()
+        return
+      }
+      seed()
+      // Guarded, because a visibilitychange can fire while already visible
+      // and two concurrent loops would double the arrival rate for good.
+      if (timeoutId === 0) queueNextSpawn()
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    if (!document.hidden) {
+      seed()
+      queueNextSpawn()
+    }
+
     return () => {
       cancelled = true
-      window.clearTimeout(timeoutId)
+      stopSpawning()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
     }
     // Runs once for the component's lifetime, since everything it touches is a
     // ref, so it never needs rebuilding as flows come and go.

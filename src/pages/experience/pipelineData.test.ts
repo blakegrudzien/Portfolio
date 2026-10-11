@@ -242,16 +242,18 @@ describe('pipelineStatus', () => {
     )
   })
 
-  it('agrees in number for a single held file', () => {
-    expect(pipelineStatus(1, false)).toContain(
-      '1 file failed to parse and is held',
-    )
+  it('reports a backlog', () => {
+    expect(pipelineStatus(1, false)).toContain('held in the DLQ')
   })
 
-  it('agrees in number for several held files', () => {
-    expect(pipelineStatus(3, false)).toContain(
-      '3 files failed to parse and are held',
-    )
+  it('says the same thing however deep the backlog gets', () => {
+    // This string drives an aria-live region and the DLQ fills on its own
+    // for as long as the page is open, so anything that counted here was
+    // re-announced every few seconds with no way to stop it.
+    const held = pipelineStatus(1, false)
+    for (const count of [2, 3, 12, 40]) {
+      expect(pipelineStatus(count, false)).toBe(held)
+    }
   })
 
   it('describes the redrive in progress whatever the backlog', () => {
