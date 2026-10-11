@@ -2,7 +2,7 @@
 
 Blake Grudzien's portfolio site. Source at [blakegrudzien/Portfolio](https://github.com/blakegrudzien/Portfolio). A statically-built React site, not a template: each project/experience page is a case study that explains the reasoning behind what was built, not just the result.
 
-**Status:** the two case studies (Chess Scholar, Level Home) and the 12-marbles puzzle are built and written. Not yet deployed, so the routes below only resolve when the host is configured to rewrite unknown paths to `index.html`.
+**Status:** live at [blakegrudzien.com](https://blakegrudzien.com), hosted on Cloudflare Workers as a static asset deployment (`wrangler.jsonc`). React Router owns every path, so `not_found_handling: "single-page-application"` is what makes a direct hit on `/projects/chess-scholar` resolve instead of 404ing.
 
 ## Stack
 

@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createMemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -7,6 +13,16 @@ import { routes } from '../routes/routeConfig'
 function renderApp(path = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(<RouterProvider router={router} />)
+}
+
+/** Scoped to the primary nav, not the whole document: nav labels name the
+ * case studies, and the pages link to each other by the same names, so an
+ * unscoped query matches body copy too. */
+function navLink(name: string) {
+  return within(screen.getByRole('navigation', { name: 'Primary' })).getByRole(
+    'link',
+    { name },
+  )
 }
 
 afterEach(() => {
@@ -26,7 +42,7 @@ describe('focus on navigation', () => {
     const user = userEvent.setup()
     renderApp()
 
-    await user.click(screen.getByRole('link', { name: 'Projects' }))
+    await user.click(navLink('Chess Scholar'))
 
     // Without this, focus stays on the link that was clicked: the next Tab
     // carries on through the nav rather than entering the new page, and a
@@ -43,14 +59,14 @@ describe('focus on navigation', () => {
     renderApp()
     const main = () => document.getElementById('main-content')
 
-    await user.click(screen.getByRole('link', { name: 'Projects' }))
+    await user.click(navLink('Chess Scholar'))
     await waitFor(() => expect(document.activeElement).toBe(main()))
 
     // Blur it, so the next assertion cannot pass just by focus never moving.
     ;(document.activeElement as HTMLElement).blur()
     expect(document.activeElement).toBe(document.body)
 
-    await user.click(screen.getByRole('link', { name: 'Resume' }))
+    await user.click(navLink('Resume'))
     await waitFor(() => expect(document.activeElement).toBe(main()))
   })
 

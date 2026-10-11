@@ -25,3 +25,11 @@ dist-ssr
 
 # wrangler dev local state
 .wrangler/
+
+# Local working notes. Kept on disk, never published: this repo is public
+# and these are scratch, not documentation.
+DIAGRAM-HANDOFF.md
+
+profile.md
+progress.md
+project-map.md
