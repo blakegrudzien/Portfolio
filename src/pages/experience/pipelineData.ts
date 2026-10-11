@@ -14,6 +14,12 @@ export type NodeId =
   | 'dlq'
   | 'slack'
 
+/** The coordinate space every node position, edge path and seat in this file
+ * is written in. The SVG's viewBox and the HTML layer carrying the node
+ * controls both read it, so a control cannot drift off the artwork it sits
+ * on, and changing the canvas is one edit rather than three. */
+export const DIAGRAM_VIEWBOX = { width: 1200, height: 574 } as const
+
 export interface DiagramNode {
   id: NodeId
   lines: string[]

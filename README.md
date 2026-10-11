@@ -26,6 +26,25 @@ npm run format       # prettier --write
 npm run build        # typecheck + production build
 ```
 
+### Deploying
+
+Pushing to `main` deploys. Cloudflare builds the site itself and publishes it
+to [blakegrudzien.com](https://blakegrudzien.com); there is no deploy command
+to run and no Wrangler install needed locally.
+
+Worth knowing, because you cannot find it by reading this repo: the build hook
+is configured in the Cloudflare dashboard, not here. `wrangler.jsonc` is the
+only part of the deploy that is in version control, and it covers what gets
+served (`./dist`, with unknown paths falling back to `index.html` so a direct
+hit on a case-study URL resolves) rather than when or how. The GitHub Actions
+workflow runs the checks on every push and PR and deliberately does not
+deploy, so a red build does not block a deploy and a green one does not cause
+one.
+
+The build is reproducible: the same commit produces the same asset hashes, so
+comparing `dist/index.html`'s bundle filename against the one production
+serves tells you whether what is live matches what you have.
+
 ### Replacing the resume
 
 `/resume` shows the PDF as an image, because a browser's built-in PDF viewer

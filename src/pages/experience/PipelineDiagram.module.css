@@ -37,10 +37,62 @@
   padding-bottom: var(--space-1);
 }
 
-.diagram {
-  width: 100%;
+/* Holds the artwork and the controls over it in one box. This carries the
+   minimum width rather than the SVG, so it is the element the controls'
+   percentages resolve against and they cannot be measuring something a
+   different size from the picture they sit on. */
+.stage {
+  position: relative;
   min-width: 640px;
+}
+
+.diagram {
+  display: block;
+  width: 100%;
   height: auto;
+}
+
+.nodeControls {
+  position: absolute;
+  inset: 0;
+  /* A fieldset's own border, padding and margin, none of which belong on a
+     layer whose only job is to position things. */
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  /* The layer itself catches nothing, so it is not a sheet of glass over
+     the artwork; only the controls in it are hit targets. */
+  pointer-events: none;
+}
+
+/* A generous box over each node, invisible at rest. The artwork is
+   hairlines and small marks, which are a miserable thing to have to hit
+   with a pointer, let alone a thumb. */
+.nodeControl {
+  position: absolute;
+  pointer-events: auto;
+  padding: 0;
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color var(--motion-duration-base) var(--motion-ease);
+}
+
+/* There was no hover state before: the outline this replaces was revealed
+   only by selection, so the single clue that any of this could be clicked
+   was the pointer cursor, and a touch device has no cursor to show. */
+.nodeControl:hover {
+  border-color: var(--color-ink-muted);
+}
+
+/* Selected. Accent is the diagram's one piece of colour and inspection is
+   the only state a node has, which is what makes the affordance findable.
+   Accent on the page background is 5.60:1. */
+.nodeControlActive {
+  border-color: var(--color-accent);
+  border-width: 2px;
 }
 
 /* Only says anything on a screen the diagram does not fit, so it is hidden
@@ -50,7 +102,7 @@
   display: none;
 }
 
-/* The one breakpoint on the site. 43rem is 688px, which is .diagram's
+/* The one breakpoint on the site. 43rem is 688px, which is .stage's
    640px minimum plus the case-study shell's 24px of padding on each side,
    so this turns on at exactly the width where the artwork stops fitting
    rather than at a round number picked to look like a phone. */
@@ -102,27 +154,6 @@
   stroke-dasharray: 5 5;
 }
 
-.node {
-  cursor: pointer;
-}
-
-/* Invisible but generous: this is the whole click/hover target now that
-   the visible rectangle is gone, and it stays a plain box regardless of
-   how sparse the artwork inside it is. Hairline strokes are a miserable
-   thing to have to hit with a pointer. */
-.hitArea {
-  fill: transparent;
-}
-
-/* The replacement affordance. Transparent until hovered or focused, so
-   the diagram at rest is artwork and lines only. */
-.nodeOutline {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 1.5;
-  transition: stroke var(--motion-duration-base) var(--motion-ease);
-}
-
 /* One weight and one color for every node's artwork. Eleven hand-drawn
    shapes only read as a set if they're drawn with the same pen. Set on
    the wrapping <g> rather than per path so a state change below can
@@ -164,16 +195,6 @@
   font-size: var(--diagram-label-size);
   fill: var(--color-ink);
   text-anchor: middle;
-}
-
-/* Hover/focus reveal. This used to be ink, because accent was reserved
-   for "the file you sent is here". With that gone, accent is free and
-   inspection is the only state a node has. It's also the diagram's one
-   piece of colour now, which is what makes the affordance findable.
-   Accent on the page background is 5.60:1. */
-.nodeInfoActive .nodeOutline {
-  stroke: var(--color-accent);
-  stroke-width: 2;
 }
 
 .nodeInfoActive .glyph,

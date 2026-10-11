@@ -1,5 +1,11 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  // No "$schema" key. It pointed at node_modules/wrangler/config-schema.json,
+  // and Wrangler is not a dependency here: deploys run from Cloudflare's own
+  // build, not from this machine. So the path resolved to nothing and an
+  // editor validated this file against no schema at all while appearing to.
+  // Adding Wrangler just to get the schema would mean carrying a deploy tool
+  // that nothing in this repo runs.
+  //
   // Committed rather than left to Wrangler's interactive setup, which
   // regenerates it on every build. Deploy config for a URL that goes on a
   // resume should be in version control, not inferred each time.
