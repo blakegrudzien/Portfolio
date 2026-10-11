@@ -30,3 +30,20 @@
   border-radius: var(--radius-md);
   margin-bottom: var(--space-7);
 }
+
+/* The preview is a picture of a page of A4, so its usefulness is purely a
+   function of how wide it gets to be. Below this it renders at about a
+   fifth of the source width, which puts resume body text under 8px: not
+   small, illegible. A visitor was fetching 310KB to look at a grey smudge
+   while the real thing sat one tap above it in the PDF link.
+   So on a narrow screen the preview goes away and that link is the whole
+   feature, which is the arrangement it already has to work in anyway.
+
+   Nothing here applies at the widths the preview is legible at, so the
+   desktop page is untouched. 40rem is where the rendered width drops
+   under about 600px, which is roughly the floor for reading it at all. */
+@media (max-width: 40rem) {
+  .previewLink {
+    display: none;
+  }
+}
