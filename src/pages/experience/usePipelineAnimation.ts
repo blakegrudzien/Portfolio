@@ -111,10 +111,10 @@ function staticScene(): { spot: StaticSpot; flow: FlowInstance }[] {
       seat: sqsQueueSeat(i),
       phase: 'traveling-common' as Phase,
     })),
-    ...[0, 1, 2].map((i) => {
+    ...[0, 1, 2].map((i, _, all) => {
       return {
         at: 'dlq' as NodeId,
-        seat: dlqClusterOffset(i),
+        seat: dlqClusterOffset(i, all.length),
         phase: 'in-dlq' as Phase,
       }
     }),
@@ -248,15 +248,16 @@ export function usePipelineAnimation() {
 
   function removeFlow(id: string) {
     tokenElsRef.current.delete(id)
-    leaveSqsQueue(id)
+    leaveStop(id)
     if (!mountedRef.current) return
     setFlows((current) => current.filter((flow) => flow.id !== id))
   }
 
-  /** Draws a queue layout, animating each file to its slot so the one
-   * behind a departure visibly slides forward instead of the gap simply
-   * appearing. The order itself is decided by the seating model. */
-  function applySqsLayout(layout: SeatedFile[]) {
+  /** Draws a layout, animating each file to its seat so the ones around a
+   * change visibly move instead of the change simply appearing: the file
+   * behind a departure slides forward, and the DLQ pile packs closer as it
+   * deepens. Which seat belongs to whom is decided by the seating model. */
+  function applySeatLayout(layout: SeatedFile[]) {
     for (const { id, seat } of layout) {
       const el = tokenElsRef.current.get(id)
       if (!el) continue
@@ -269,12 +270,23 @@ export function usePipelineAnimation() {
   }
 
   function enqueueAtSqs(id: string) {
-    applySqsLayout(seating().enqueueSqs(id))
+    applySeatLayout(seating().enqueueSqs(id))
   }
 
-  function leaveSqsQueue(id: string) {
-    const layout = seating().dequeueSqs(id)
-    if (layout) applySqsLayout(layout)
+  function parkInDlq(id: string) {
+    applySeatLayout(seating().addToDlq(id))
+  }
+
+  /** Gives up whichever seat this file was holding. Both stops that seat
+   * their occupants relative to each other have to be told, since a file
+   * can leave either one: SQS when Lambda takes it, the DLQ when a redrive
+   * does. Each returns null when the file was not there, so the other
+   * occupants are only redrawn when they actually moved. */
+  function leaveStop(id: string) {
+    const sqsLayout = seating().dequeueSqs(id)
+    if (sqsLayout) applySeatLayout(sqsLayout)
+    const dlqLayout = seating().removeFromDlq(id)
+    if (dlqLayout) applySeatLayout(dlqLayout)
   }
 
   function registerToken(id: string, el: SVGGElement | null) {
@@ -289,8 +301,8 @@ export function usePipelineAnimation() {
     onDone: () => void,
   ) {
     // Starting a segment is what "leaving a stop" means, so this is the
-    // one place that has to know the token is no longer queued.
-    leaveSqsQueue(id)
+    // one place that has to know the token no longer holds a seat.
+    leaveStop(id)
 
     const el = tokenElsRef.current.get(id)
     if (!el) {
@@ -323,7 +335,32 @@ export function usePipelineAnimation() {
     // It eases out of the seat below instead, while it travels.
     void el.getBoundingClientRect()
 
-    requestAnimationFrame(() => {
+    // A hop ends exactly once, on whichever of these comes first. Arrival
+    // used to hang solely off `transitionend`: if that event never arrived,
+    // because the transition was cancelled or interrupted, the sequence
+    // stopped there permanently *and* onDone never ran, so this flow's
+    // traveling slot was never released. Every occurrence would have cost
+    // one of MAX_TRAVELING slots for the life of the page, throttling
+    // ambient traffic further each time until nothing moved at all.
+    //
+    // Declared above the frame request below, which has to be able to see it.
+    let settled = false
+
+    // Starting the hop is deferred a frame so the browser takes the values
+    // set above as the state being transitioned *from*, rather than
+    // collapsing both into one style recalculation and animating nothing.
+    //
+    // A hidden tab stops servicing requestAnimationFrame while still
+    // running timers, so this can be withheld for as long as the tab is in
+    // the background while the watchdog below settles the hop regardless.
+    // Every withheld callback then fires at once on return, which is why it
+    // has to check whether its hop is still running: without the guard each
+    // one reset `translate` to the node's centre on a file that had long
+    // since parked, and nothing would move it back, because its own settle
+    // had already run. Parked files appeared to jump into the middle of the
+    // node, most visibly at Athena, which is drawn as a grid of cells.
+    const frame = requestAnimationFrame(() => {
+      if (settled) return
       el.style.setProperty(
         'transition',
         `offset-distance ${durationMs}ms linear, translate ${durationMs}ms var(--motion-ease)`,
@@ -332,21 +369,13 @@ export function usePipelineAnimation() {
       el.style.setProperty('translate', '0px 0px')
     })
 
-    // A hop ends exactly once, on whichever of these comes first. Arrival
-    // used to hang solely off `transitionend`: if that event never arrived,
-    // because the transition was cancelled or interrupted, the sequence
-    // stopped there permanently *and* onDone never ran, so this flow's
-    // traveling slot was never released. Every occurrence would have cost
-    // one of MAX_TRAVELING slots for the life of the page, throttling
-    // ambient traffic further each time until nothing moved at all.
-    let settled = false
-
     const settle = (arrivedByTransition: boolean) => {
       if (settled) return
       settled = true
       el.removeEventListener('transitionend', handleEnd)
       el.removeEventListener('transitioncancel', handleCancel)
       clearTrackedTimeout(watchdog)
+      cancelAnimationFrame(frame)
 
       if (!arrivedByTransition) {
         // The travel never played out, so put the file where it was headed.
@@ -447,14 +476,10 @@ export function usePipelineAnimation() {
       () => {
         const finalPhase = getFinalPhase(trigger)
         if (finalPhase === 'done-success') parkAtAthena(id)
-        if (finalPhase === 'in-dlq') {
-          // Park it in the DLQ cluster, where it stays, visibly, until a
-          // redrive sweeps the whole backlog.
-          const seat = seating().nextDlqSeat()
-          tokenElsRef.current
-            .get(id)
-            ?.style.setProperty('translate', `${seat.x}px ${seat.y}px`)
-        }
+        // Park it in the DLQ pile, where it stays, visibly, until a redrive
+        // sweeps the whole backlog. This re-seats the files already in the
+        // bin as well, since the rows pack closer as the pile deepens.
+        if (finalPhase === 'in-dlq') parkInDlq(id)
         updateFlow(id, { phase: finalPhase })
         onSettled()
       },

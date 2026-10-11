@@ -28,13 +28,52 @@
   gap: var(--space-4);
   flex: 1 1 640px;
   min-width: 0;
+}
+
+.diagramScroll {
   overflow-x: auto;
+  /* Room for the scrollbar where one is drawn in the layout, so it does not
+     sit on top of the bottom row of node labels. */
+  padding-bottom: var(--space-1);
 }
 
 .diagram {
   width: 100%;
   min-width: 640px;
   height: auto;
+}
+
+/* Only says anything on a screen the diagram does not fit, so it is hidden
+   by default and revealed by the query below rather than the other way
+   round: nothing should announce a scroll that is not there. */
+.scrollHint {
+  display: none;
+}
+
+/* The one breakpoint on the site. 43rem is 688px, which is .diagram's
+   640px minimum plus the case-study shell's 24px of padding on each side,
+   so this turns on at exactly the width where the artwork stops fitting
+   rather than at a round number picked to look like a phone. */
+@media (max-width: 43rem) {
+  .scrollHint {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+  }
+
+  /* Fades the cut edge so the diagram reads as continuing past it. A mask
+     is positioned against the scroll container's own box rather than its
+     contents, so the fade stays at the edge instead of travelling with the
+     artwork. Applied only here, since above this width there is no cut. */
+  .diagramScroll {
+    mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - var(--space-6)),
+      transparent 100%
+    );
+  }
 }
 
 .region {
