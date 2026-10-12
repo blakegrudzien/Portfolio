@@ -4,7 +4,15 @@
   padding: var(--space-6) var(--space-5) var(--space-8);
 }
 
+/* A column, so every part of the header gets its own line and shrinks to
+   its own content. The index link and the badge are both inline-block, so
+   left to themselves they sit side by side: "← Experience" with the
+   EXPERIENCE badge pressed against it, which is the same word twice and
+   reads as one crowded run rather than two separate things. */
 .header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   margin-bottom: var(--space-8);
 }
 
@@ -21,11 +29,9 @@
 }
 
 /* The badge is small-caps mono and the title is 44px serif, so the gap
-   between them has to carry that difference. At 12px they read as one
-   stacked block and the badge looks like a kicker the title is attached
-   to rather than a label on the page. */
+   between them has to carry that difference. */
 .title {
-  margin-top: var(--space-5);
+  margin-top: var(--space-4);
 }
 
 .dates {
