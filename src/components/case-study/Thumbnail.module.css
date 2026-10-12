@@ -30,3 +30,47 @@
   fill: var(--color-ink-muted);
   stroke: none;
 }
+
+/* Lines that join things rather than being things. */
+.faint {
+  stroke: var(--color-border);
+}
+
+/* Anything laid on the circuit. offset-path puts it on the road and
+   offset-rotate turns it square to the direction of travel, so a tick is
+   perpendicular everywhere including round the corners. Position arrives as
+   a custom property because offset-distance is not reliably settable as a
+   style property from script. */
+.onTrack {
+  offset-path: var(--track);
+  offset-distance: var(--at, 0%);
+  offset-rotate: auto;
+}
+
+.hairline {
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+}
+
+/* Abbreviated the way a watch field label has to be, which is also what
+    lets it be set big enough to read: "Current Place" spelled out needs a
+    wider dial and a smaller type size to fit the same ring. */
+.capsLabel {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  /* Barely any, because the label is mixed case now and tracking that
+     suits small caps pulls lower-case letters apart. */
+  letter-spacing: 0.02em;
+  fill: var(--color-ink);
+  stroke: none;
+  text-anchor: middle;
+}
+
+.readout {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 500;
+  fill: var(--color-accent);
+  stroke: none;
+  text-anchor: middle;
+}
