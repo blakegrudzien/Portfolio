@@ -1,0 +1,210 @@
+.watch {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* The whole device, strap included. A screen floating on its own reads as
+   a dial; the lugs, the buttons and the wordmark are what make it a thing
+   somebody is wearing while running. */
+.device {
+  position: relative;
+  width: 18rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Strap, above and below. Tapered and ribbed, which is all it takes: it is
+   scenery, and anything more detailed competes with the screen. */
+.strap {
+  width: 6.2rem;
+  height: 2.6rem;
+  background: var(--color-ink);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0.11) 0 2px,
+    transparent 2px 7px
+  );
+}
+
+.strapTop {
+  border-radius: 1rem 1rem 0.4rem 0.4rem;
+  margin-bottom: -0.9rem;
+}
+
+.strapBottom {
+  border-radius: 0.4rem 0.4rem 1rem 1rem;
+  margin-top: -0.9rem;
+}
+
+.case {
+  position: relative;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 50%;
+  background: var(--color-ink);
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+/* Five of them, where a Forerunner puts them: three right, two left.
+ *
+ * Placed by angle, not by edge. Offsetting a button to the left or right
+ * of the case's box only touches the rim at the one height where a circle
+ * is as wide as its bounding box; everywhere else it leaves the button
+ * hanging in the corner with nothing behind it. Rotating out from the
+ * centre puts each one on the rim and points it outward at the same time. */
+.button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.35rem;
+  height: 0.5rem;
+  margin: -0.25rem 0 0 -0.675rem;
+  border-radius: 0.18rem;
+  background: color-mix(in srgb, var(--color-ink) 62%, #fff);
+  transform: rotate(var(--angle)) translateX(8.75rem);
+}
+
+.buttonRightUpper {
+  --angle: -34deg;
+}
+
+.buttonRightMiddle {
+  --angle: 0deg;
+}
+
+.buttonRightLower {
+  --angle: 34deg;
+}
+
+.buttonLeftUpper {
+  --angle: -146deg;
+}
+
+.buttonLeftLower {
+  --angle: 146deg;
+}
+
+.wordmark {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.18em;
+  color: #fff;
+  opacity: 0.55;
+}
+
+.screen {
+  width: 15rem;
+  height: 15rem;
+  border-radius: 50%;
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  /* Generous, and not for looks: a circle's widest usable box is the square
+     inside it, so content laid out to the full diameter has its corners cut
+     off. The padding keeps every row inside the glass. */
+  padding: 1.9rem 1.45rem 1.6rem;
+}
+
+.clock,
+.foot {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+
+.foot {
+  font-weight: 500;
+}
+
+.asOf {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.03em;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+/* The field itself: two columns of cells, hairline-ruled, the way the
+   activity screen rules its own. */
+.grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: 0.28rem 0.15rem;
+  min-width: 0;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cell:nth-child(2n) {
+  border-right: none;
+}
+
+.cell:nth-last-child(-n + 2) {
+  border-bottom: none;
+}
+
+/* Big number, small caption: the whole visual grammar of a watch data
+   screen, which has to be readable at arm's length, at a glance, running. */
+.value {
+  font-family: var(--font-mono);
+  font-size: 1.1875rem;
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "pending" and "leading" are words rather than numbers and do not fit a
+   cell at the number size. */
+.valueWord {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  color: var(--color-ink-muted);
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  color: var(--color-ink-muted);
+}
+
+/* The one value that moves between cables. Accent is this page's only
+   colour, so it is spent on the single thing a reader is asked to notice:
+   five of these are frozen and this one is not. */
+.cellLive .value {
+  color: var(--color-accent);
+}
+
+.caption {
+  max-width: 24rem;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+  text-align: center;
+}

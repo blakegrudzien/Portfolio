@@ -1,0 +1,96 @@
+/* Same arrangement as the Level Home diagram: the artwork holds its width
+   and scrolls sideways on a narrow screen, and only the artwork scrolls,
+   not the controls under it. */
+.scroll {
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.stage {
+  position: relative;
+  min-width: 720px;
+}
+
+.diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The road. Drawn with a stroke wide enough to hold eight runners side by
+   side, so two of them at the same distance are next to each other rather
+   than on top of each other. */
+.road {
+  fill: none;
+  stroke: var(--color-surface);
+  stroke-width: 26;
+  stroke-linecap: round;
+}
+
+.roadEdge {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 28;
+  stroke-linecap: round;
+}
+
+/* Anything that sits on the course.
+ *
+ * `offset-path` places an element along the course and `offset-rotate:
+ * auto` turns it to face the direction of travel, which is what makes a
+ * child's own y coordinate a sideways offset across the road rather than
+ * a fixed screen direction. That is how runners get lanes and how a
+ * timing point draws itself square across the course on the turns.
+ *
+ * Position comes in through `--at` rather than being set on
+ * `offset-distance` directly. offset-path and offset-distance are not
+ * reliably exposed as named CSSStyleDeclaration accessors, so assigning
+ * them from JavaScript can silently do nothing, and the one way to write
+ * a value from script that always lands is a custom property. It also
+ * means the path itself is declared once here and read from a variable the
+ * component sets, instead of being repeated for every element on it. */
+.onCourse {
+  offset-path: var(--course-offset-path);
+  offset-distance: var(--at, 0%);
+  offset-rotate: auto;
+}
+
+/* A cable laid across the road. Short ticks rather than labelled gates:
+   there are twenty of them and the point they make is how close together
+   they are, which reads as a texture rather than as twenty things to
+   consider one at a time. */
+.cable {
+  stroke: var(--color-ink-muted);
+  stroke-width: 2;
+}
+
+.cableStart,
+.cableFinish {
+  stroke: var(--color-ink);
+  stroke-width: 3;
+}
+
+.runner {
+  fill: var(--color-ink);
+  /* Lane changes and the jump back to the line on a restart are the only
+     movements worth easing. Travel itself is a position written every
+     frame, so it must not be transitioned or it would lag the model. */
+  transition: fill var(--motion-duration-fast) var(--motion-ease);
+}
+
+/* The one being inspected. Accent is this diagram's only colour, so it is
+   spent on the single thing a visitor is being asked to follow. */
+.runnerSelected {
+  fill: var(--color-accent);
+}
+
+@media (max-width: 48rem) {
+  .scroll {
+    mask-image: linear-gradient(
+      to right,
+      #000 0,
+      #000 calc(100% - var(--space-6)),
+      transparent 100%
+    );
+  }
+}

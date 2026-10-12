@@ -1,0 +1,70 @@
+.propagation {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.diagram {
+  display: block;
+  width: 100%;
+  min-width: 34rem;
+  height: auto;
+}
+
+/* One weight and no fills, the same pen the Level Home diagram is drawn
+   with. Four hand-drawn marks only read as a set if they match. */
+.glyph {
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  fill: var(--color-ink);
+  text-anchor: middle;
+}
+
+.detail {
+  font-size: 12px;
+  fill: var(--color-ink-muted);
+  text-anchor: middle;
+}
+
+/* One crossing making the whole trip, drawn as the thing it is: a record,
+   not a dot. Only the selected runner's crossings travel. Eight runners
+   past twenty timing points is a hundred and sixty of these, and all of
+   them at once would read as a continuous stream, which is the opposite of
+   what is worth showing. */
+.record {
+  fill: var(--color-accent);
+  offset-path: var(--wire);
+  offset-rotate: 0deg;
+  animation: carry 1.6s var(--motion-ease) forwards;
+}
+
+@keyframes carry {
+  from {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  to {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
