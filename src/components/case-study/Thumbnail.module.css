@@ -11,19 +11,13 @@
   stroke-linejoin: round;
 }
 
-.road,
-.pipe {
+.road {
   stroke: var(--color-border);
   stroke-width: 11;
 }
 
 .accent {
   stroke: var(--color-accent);
-}
-
-.accentFill {
-  fill: var(--color-accent);
-  stroke: none;
 }
 
 .solid {
