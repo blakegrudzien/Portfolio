@@ -1,0 +1,32 @@
+/* The register the two stills share: one stroke weight, no fills, the same
+   pen the full diagrams are drawn with. */
+.thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  fill: none;
+  stroke: var(--color-ink-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.road,
+.pipe {
+  stroke: var(--color-border);
+  stroke-width: 11;
+}
+
+.accent {
+  stroke: var(--color-accent);
+}
+
+.accentFill {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.solid {
+  fill: var(--color-ink-muted);
+  stroke: none;
+}

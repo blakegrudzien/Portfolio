@@ -23,10 +23,6 @@ const listed = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]!)
  * decision someone has to make rather than one they can miss.
  */
 const DELIBERATELY_UNLISTED: Record<string, string> = {
-  '/projects':
-    'serves the same page as /projects/chess-scholar while there is one project, and listing both would offer a crawler two URLs for identical content',
-  '/experience':
-    'serves the same page as /experience/level-home, for the same reason',
   [NOT_FOUND_META.path]: 'the catch-all, which is not a page',
 }
 

@@ -1,5 +1,6 @@
 import { CaseStudyShell } from '../../components/case-study/CaseStudyShell'
 import { CaseStudySection } from '../../components/case-study/CaseStudySection'
+import { paths } from '../../routes/paths'
 import { PipelineDiagram } from './PipelineDiagram'
 
 export function LevelHomePage() {
@@ -9,6 +10,7 @@ export function LevelHomePage() {
       title="Level Home"
       dates="May 2025 – September 2025"
       tags={['Go', 'AWS Lambda', 'Kinesis', 'Parquet']}
+      indexLink={{ label: 'Experience', href: paths.experience }}
     >
       <CaseStudySection heading="The problem">
         <p>

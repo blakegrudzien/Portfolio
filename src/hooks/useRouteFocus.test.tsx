@@ -42,7 +42,7 @@ describe('focus on navigation', () => {
     const user = userEvent.setup()
     renderApp()
 
-    await user.click(navLink('Chess Scholar'))
+    await user.click(navLink('Projects'))
 
     // Without this, focus stays on the link that was clicked: the next Tab
     // carries on through the nav rather than entering the new page, and a
@@ -59,7 +59,7 @@ describe('focus on navigation', () => {
     renderApp()
     const main = () => document.getElementById('main-content')
 
-    await user.click(navLink('Chess Scholar'))
+    await user.click(navLink('Projects'))
     await waitFor(() => expect(document.activeElement).toBe(main()))
 
     // Blur it, so the next assertion cannot pass just by focus never moving.

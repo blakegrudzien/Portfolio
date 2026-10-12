@@ -1,11 +1,14 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { SiteShell } from '../components/layout/SiteShell'
+import { BrookseePage } from '../pages/experience/BrookseePage'
+import { ExperienceIndexPage } from '../pages/experience/ExperienceIndexPage'
 import { LevelHomePage } from '../pages/experience/LevelHomePage'
 import { HomePage } from '../pages/home/HomePage'
 import { LabPage } from '../pages/lab/LabPage'
 import { ErrorPage } from '../pages/error/ErrorPage'
 import { NotFoundPage } from '../pages/not-found/NotFoundPage'
 import { ChessScholarPage } from '../pages/projects/ChessScholarPage'
+import { ProjectsIndexPage } from '../pages/projects/ProjectsIndexPage'
 import { ResumePage } from '../pages/resume/ResumePage'
 import { paths } from './paths'
 import { NOT_FOUND_META, metaForPath } from './routeMeta'
@@ -41,13 +44,9 @@ export const routes: RouteObject[] = [
             element: <HomePage />,
             handle: handleFor(paths.home),
           },
-          // /projects and /projects/chess-scholar both render ChessScholarPage for now,
-          // since there's only one project. When a second one exists, only the
-          // element on `projects` needs to change to a real index page. The
-          // chess-scholar route and its URL stay exactly as they are.
           {
             path: paths.projects,
-            element: <ChessScholarPage />,
+            element: <ProjectsIndexPage />,
             handle: handleFor(paths.projects),
           },
           {
@@ -57,13 +56,18 @@ export const routes: RouteObject[] = [
           },
           {
             path: paths.experience,
-            element: <LevelHomePage />,
+            element: <ExperienceIndexPage />,
             handle: handleFor(paths.experience),
           },
           {
             path: paths.experienceLevelHome,
             element: <LevelHomePage />,
             handle: handleFor(paths.experienceLevelHome),
+          },
+          {
+            path: paths.experienceBrooksee,
+            element: <BrookseePage />,
+            handle: handleFor(paths.experienceBrooksee),
           },
           {
             path: paths.lab,

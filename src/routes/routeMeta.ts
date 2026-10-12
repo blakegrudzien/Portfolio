@@ -36,9 +36,9 @@ export const ROUTE_META: RouteMeta[] = [
   },
   {
     path: '/projects',
-    title: `Chess Scholar${suffix}`,
+    title: `Projects${suffix}`,
     description:
-      'A chess coach answering from four backend sources: SQL over 127,435 games, pgvector search over 468,862 chunks of commentary, a pool of Stockfish subprocesses, and opening-prefix matching.',
+      'Things Blake Grudzien has built outside of work, written up as case studies rather than listed.',
   },
   {
     path: '/projects/chess-scholar',
@@ -48,15 +48,21 @@ export const ROUTE_META: RouteMeta[] = [
   },
   {
     path: '/experience',
-    title: `Level Home${suffix}`,
+    title: `Experience${suffix}`,
     description:
-      'Rebuilding a device telemetry pipeline in Go during an internship at Level Home, so failed files could be fixed and retried instead of lost. Data loss went from over 30% to under 1%.',
+      "Blake Grudzien's software engineering internships: a device telemetry pipeline in Go at Level Home, and live race data on runners' watches at Brooksee.",
   },
   {
     path: '/experience/level-home',
     title: `Level Home${suffix}`,
     description:
       'Rebuilding a device telemetry pipeline in Go during an internship at Level Home, so failed files could be fixed and retried instead of lost. Data loss went from over 30% to under 1%.',
+  },
+  {
+    path: '/experience/brooksee',
+    title: `Brooksee${suffix}`,
+    description:
+      "Putting live race data on marathon runners' watches during an internship at Brooksee: place, the gap to the runner ahead and a gun-synced clock, derived from timing-point crossings.",
   },
   {
     path: '/lab',

@@ -20,8 +20,12 @@
   color: var(--color-accent);
 }
 
+/* The badge is small-caps mono and the title is 44px serif, so the gap
+   between them has to carry that difference. At 12px they read as one
+   stacked block and the badge looks like a kicker the title is attached
+   to rather than a label on the page. */
 .title {
-  margin-top: var(--space-3);
+  margin-top: var(--space-5);
 }
 
 .dates {

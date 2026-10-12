@@ -16,16 +16,17 @@ import styles from './NavBar.module.css'
 // studies on credibility; it's the one thing here that shows curiosity
 // rather than competence, and buried in an aside at the bottom of the home
 // page almost nobody found it.
-// Named after the work rather than after a category, and pointing at the
-// case study's own URL. With one entry each, "Experience" and "Projects"
-// promised an index that isn't there: you clicked a plural and landed on a
-// single page whose <h1> disagreed with the tab you came from. These go back
-// to category names when there is more than one of each to list.
+//
+// Experience and Projects are category names again now that both have a real
+// index page to land on. They were briefly named after the work itself,
+// because with one entry each a plural promised a list that did not exist and
+// you landed on a single page whose <h1> disagreed with the tab you came
+// from.
 const navItems: { to: string; label: string; end?: boolean }[] = [
   // `end`, or "/" would match every route and Home would always look active.
   { to: paths.home, label: 'Home', end: true },
-  { to: paths.experienceLevelHome, label: 'Level Home' },
-  { to: paths.projectChessScholar, label: 'Chess Scholar' },
+  { to: paths.experience, label: 'Experience' },
+  { to: paths.projects, label: 'Projects' },
   { to: paths.lab, label: 'Lab' },
   { to: paths.resume, label: 'Resume' },
 ]

@@ -1,6 +1,7 @@
 import { CaseStudyShell } from '../../components/case-study/CaseStudyShell'
 import { CaseStudySection } from '../../components/case-study/CaseStudySection'
 import { ExpandablePanelList } from '../../components/common/ExpandablePanelList'
+import { paths } from '../../routes/paths'
 import styles from './ChessScholarPage.module.css'
 
 const architectureLayers = [
@@ -78,6 +79,7 @@ export function ChessScholarPage() {
       title="Chess Scholar"
       tags={['Python', 'PostgreSQL', 'RAG', 'Claude tool-calling']}
       links={links}
+      indexLink={{ label: 'Projects', href: paths.projects }}
     >
       <CaseStudySection heading="The problem">
         <p>

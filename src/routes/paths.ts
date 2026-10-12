@@ -4,6 +4,7 @@ export const paths = {
   projectChessScholar: '/projects/chess-scholar',
   experience: '/experience',
   experienceLevelHome: '/experience/level-home',
+  experienceBrooksee: '/experience/brooksee',
   lab: '/lab',
   resume: '/resume',
 } as const
