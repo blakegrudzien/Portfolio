@@ -12,10 +12,21 @@
  * about runners, time, or the DOM.
  */
 
-/** The coordinate space the path and every checkpoint position is written
- * in. Read by the SVG's viewBox and by the layer of controls over it, so
- * neither can drift from the other. */
-export const COURSE_VIEWBOX = { width: 1200, height: 420 } as const
+/** The window onto the course, as an SVG viewBox.
+ *
+ * Trimmed to the road rather than starting at the origin. The path was
+ * drawn inside a 1200 by 420 box and only occupies x 150 to 1066 of it, so
+ * a box starting at 0 carried 150 units of empty space down the left and
+ * 134 down the right. The SVG lined up with the column it sat in and the
+ * course did not, which read as the diagram being indented from everything
+ * under it. The margin that remains is the 16 a timing point needs, since
+ * cables reach either side of the centreline. */
+export const COURSE_VIEWBOX = {
+  x: 134,
+  y: 79,
+  width: 949,
+  height: 329,
+} as const
 
 /** One path, so a runner's position along it is `offset-distance` as a
  * percentage and the browser does every piece of curve arithmetic. Nothing

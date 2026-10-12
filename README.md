@@ -12,7 +12,7 @@ Blake Grudzien's portfolio site. Source at [blakegrudzien/Portfolio](https://git
 - Images are pre-sized and encoded as WebP at build-authoring time rather than served raw: the Chess Scholar screenshot went from 1.8 MB to 140 KB, and the headshot is cropped square so it can be masked to a circle without touching the face.
 - Self-hosted fonts via `@fontsource` (Zilla Slab, IBM Plex Sans, IBM Plex Mono), latin subset only, rather than a Google Fonts `<link>`, which avoids a third-party render-blocking request.
 - oxlint for linting (with `jsx-a11y`), Prettier for formatting, Vitest + React Testing Library for tests.
-- GitHub Actions CI runs format check, lint, typecheck, tests, and build on every push/PR.
+- GitHub Actions CI runs format check, lint, typecheck, tests, and build on every push/PR. The build itself runs the tests too, which is what stops a red suite reaching production (see Deploying).
 
 ## Development
 
@@ -23,7 +23,7 @@ npm run test       # run tests in watch mode
 npm run lint        # oxlint
 npm run typecheck   # tsc -b
 npm run format       # prettier --write
-npm run build        # typecheck + production build
+npm run build        # typecheck, tests, then production build
 ```
 
 ### Deploying
@@ -32,14 +32,22 @@ Pushing to `main` deploys. Cloudflare builds the site itself and publishes it
 to [blakegrudzien.com](https://blakegrudzien.com); there is no deploy command
 to run and no Wrangler install needed locally.
 
+`npm run build` runs the test suite before it builds, so a red suite fails the
+build and nothing is published. That is deliberate and it is the only thing
+standing between a broken commit and production: Cloudflare builds on push and
+GitHub Actions runs the checks on push, and the two know nothing about each
+other, so a failing Actions run cannot stop a deploy on its own. Gating inside
+the build is what makes the tests block it. The one assumption is that
+Cloudflare's build command is `npm run build`; if that is ever changed in the
+dashboard to call Vite directly, the gate is gone.
+
 Worth knowing, because you cannot find it by reading this repo: the build hook
 is configured in the Cloudflare dashboard, not here. `wrangler.jsonc` is the
 only part of the deploy that is in version control, and it covers what gets
 served (`./dist`, with unknown paths falling back to `index.html` so a direct
-hit on a case-study URL resolves) rather than when or how. The GitHub Actions
-workflow runs the checks on every push and PR and deliberately does not
-deploy, so a red build does not block a deploy and a green one does not cause
-one.
+hit on a case-study URL resolves) rather than when or how. The GitHub Actions workflow runs
+the same checks on every push and PR and does not deploy; it is there to report
+failures against a PR before the push that would publish them.
 
 The build is reproducible: the same commit produces the same asset hashes, so
 comparing `dist/index.html`'s bundle filename against the one production
@@ -62,9 +70,9 @@ site quietly showing an outdated resume next to a current download link.
 
 ## A couple of design decisions worth naming
 
-- **Direct-render-now, index-later routing.** `/projects` and `/projects/chess-scholar` currently render the same page, since there's only one project; `/experience` and `/experience/level-home` likewise. Adding a second entry later is a one-line swap of the index route's element, and the specific case-study routes and their URLs don't move.
+- **Sections have real index pages.** `/experience` and `/projects` list the case studies under them rather than being second URLs for their only entry, which is also what retired their self-referencing canonicals. `/projects` lists one thing, which is slightly odd, but the two sections reading as the same kind of page is worth more than avoiding a one-item list.
 - **No About page.** It existed, and its content moved onto the home page instead. Three paragraphs did not justify a route of their own, and a page nobody maintains is worse than one that doesn't exist. The home page carries the same material and reads as a single-page personal site.
 - **The marble puzzle has its own `/lab` tab.** It was originally left out of the nav, on the grounds that one puzzle doesn't carry a case study's weight. That reasoning was about credibility, and the puzzle isn't competing on credibility: it's the one page here that shows curiosity rather than competence, and as a single line at the bottom of the home page it went unread.
-- **No data-driven "sections" abstraction for case studies.** With two case studies, a generic content schema would be premature, so page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess Scholar page.
+- **No data-driven "sections" abstraction for case studies.** With three case studies, a generic content schema would still be premature, so page components compose a shared `CaseStudySection` directly as JSX. The one place a typed data array is used is for genuinely homogeneous repeated items, like the architecture-layer accordion on the Chess Scholar page.
 - **Every route's title and description come from one table** (`src/routes/routeMeta.ts`). The router hangs each entry on its route, a hook applies the current one on navigation, and a build step writes a static HTML file per route carrying the same tags. That last part is what makes a shared case-study link unfurl as the case study: link previews read the HTML they are served and never run the bundle, so setting the tags at runtime alone would leave every shared URL showing the home page's card.
 - **The Level Home pipeline diagram's animation state is split into pure data/logic and DOM-driving code** (`pipelineData.ts`, `pipelineFlow.ts`, `pipelineSeating.ts`, `usePipelineAnimation.ts`) specifically so the parts that can be checked without a browser are, meaning the geometry, the sequencing, and the seating rules. Only `usePipelineAnimation.ts` touches the DOM; everything it decides is decided in one of the other three and unit tested there.

@@ -1,7 +1,11 @@
 import type { CSSProperties } from 'react'
 import styles from './Propagation.module.css'
 
-const VIEWBOX = { width: 620, height: 128 }
+/** Trimmed to the drawing, for the same reason the course's is: the glyphs
+ * sit between y 24 and y 109, and the rightmost caption runs a few units
+ * past 620, so a box of 0 0 620 128 both padded the top and clipped the
+ * end of "the field redraws". */
+const VIEWBOX = { x: 0, y: 18, width: 636, height: 97 }
 
 /** The line every crossing travels to reach a wrist.
  *
@@ -98,7 +102,7 @@ export function Propagation({
     <div className={styles.propagation}>
       <svg
         className={styles.diagram}
-        viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
+        viewBox={`${VIEWBOX.x} ${VIEWBOX.y} ${VIEWBOX.width} ${VIEWBOX.height}`}
         aria-hidden="true"
         style={{ '--wire': `path('${WIRE}')` } as CSSProperties}
       >

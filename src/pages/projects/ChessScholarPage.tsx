@@ -157,9 +157,9 @@ export function ChessScholarPage() {
 
       <CaseStudySection heading="Tests & CI">
         <p>
-          235 tests, run in CI on Python 3.11 and 3.12 via GitHub Actions. Tests
-          that need a live PostgreSQL connection skip themselves locally with a
-          clear reason printed, rather than failing or silently passing.
+          250+ tests, run in CI on Python 3.11 and 3.12 via GitHub Actions.
+          Tests that need a live PostgreSQL connection skip themselves locally
+          with a clear reason printed, rather than failing or silently passing.
         </p>
       </CaseStudySection>
 

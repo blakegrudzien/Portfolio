@@ -6,6 +6,9 @@
   padding-bottom: var(--space-1);
 }
 
+/* Floored only. The cap that keeps the diagram on one screen lives on the
+   simulation, so the course and the propagation strip under it share an
+   edge instead of each choosing a width of its own. */
 .stage {
   position: relative;
   min-width: 720px;
@@ -64,8 +67,8 @@
   stroke-width: 2;
 }
 
-.cableStart,
-.cableFinish {
+/* The start, which on a closed course is also the finish. */
+.cableStart {
   stroke: var(--color-ink);
   stroke-width: 3;
 }

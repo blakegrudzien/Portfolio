@@ -50,6 +50,12 @@ export function RaceSimulation() {
         Scroll the course sideways to follow the whole race.
       </p>
 
+      <Propagation
+        bib={selectedBib}
+        checkpointId={watch.asOfCheckpointId}
+        animate={!isStill}
+      />
+
       <div className={styles.controls}>
         {!isStill && (
           <button type="button" className={styles.restart} onClick={restart}>
@@ -92,12 +98,6 @@ export function RaceSimulation() {
 
         <RunnerWatch bib={selectedBib} watch={watch} />
       </div>
-
-      <Propagation
-        bib={selectedBib}
-        checkpointId={watch.asOfCheckpointId}
-        animate={!isStill}
-      />
     </div>
   )
 }

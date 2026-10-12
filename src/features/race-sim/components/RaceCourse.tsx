@@ -49,13 +49,19 @@ export function RaceCourse({ registerRunner, selectedBib }: RaceCourseProps) {
       >
         <svg
           className={styles.diagram}
-          viewBox={`0 0 ${COURSE_VIEWBOX.width} ${COURSE_VIEWBOX.height}`}
+          viewBox={`${COURSE_VIEWBOX.x} ${COURSE_VIEWBOX.y} ${COURSE_VIEWBOX.width} ${COURSE_VIEWBOX.height}`}
           aria-hidden="true"
         >
           <path className={styles.roadEdge} d={COURSE_PATH} />
           <path className={styles.road} d={COURSE_PATH} />
 
-          {CHECKPOINTS.map((checkpoint) => (
+          {/* The finish is not drawn. On a closed course it is the same
+          stretch of road as the start, so both cables land on one point,
+          and offset-rotate reads the tangent leaving the path at 0% and
+          the tangent arriving at it at 100%. Those differ by about a
+          hundred degrees here, so the two ticks crossed and the start line
+          rendered as a plus sign. One mark, carrying both. */}
+          {CHECKPOINTS.filter((c) => c.kind !== 'finish').map((checkpoint) => (
             <g
               key={checkpoint.id}
               className={styles.onCourse}
@@ -65,7 +71,6 @@ export function RaceCourse({ registerRunner, selectedBib }: RaceCourseProps) {
                 className={cx(
                   styles.cable,
                   checkpoint.kind === 'start' && styles.cableStart,
-                  checkpoint.kind === 'finish' && styles.cableFinish,
                 )}
                 x1={0}
                 y1={-15}

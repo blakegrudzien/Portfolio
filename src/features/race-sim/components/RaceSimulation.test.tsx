@@ -88,9 +88,14 @@ describe('the course', () => {
   it('draws the road, a cable per timing point and a runner per bib', () => {
     const { container } = render(<RaceSimulation />)
 
+    // One short of the timing points on purpose: the course is closed, so
+    // the finish is the same stretch of road as the start and shares its
+    // mark. Drawing both put two cables on one spot at different angles,
+    // which rendered as a plus sign rather than a start line.
     expect(course(container).querySelectorAll('line')).toHaveLength(
-      CHECKPOINTS.length,
+      CHECKPOINTS.length - 1,
     )
+    expect(CHECKPOINTS.filter((c) => c.kind === 'finish')).toHaveLength(1)
     expect(course(container).querySelectorAll('circle')).toHaveLength(
       RUNNERS.length,
     )
