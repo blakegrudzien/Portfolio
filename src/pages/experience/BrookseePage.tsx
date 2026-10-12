@@ -17,11 +17,8 @@ const derivations = [
     title: 'Gap to the runner ahead',
     children: (
       <p>
-        Not stored anywhere. Every crossing carries a time of day, so the
-        crossings at one cable are already an ordered list of who came through
-        and when. Ask for the ones earlier than yours, take the most recent, and
-        subtract. An empty result means nobody crossed before you, which is to
-        say you are leading.
+        Derived from the difference between a runner's time of day at a crossing
+        and that of whoever crossed the same cable before them.
       </p>
     ),
   },
@@ -31,17 +28,12 @@ const derivations = [
     children: (
       <>
         <p>
-          A watch starts counting when the runner presses start, which is not
-          when their race started. The official clock runs from the gun, and
-          runners cross the start line at irregular intervals after it.
-        </p>
-        <p>
-          So the timer is derived too: find the runner's own crossing of the
-          start line and offset the watch's clock by it. I first tried
-          synchronising against Unix time so the Bluetooth round trip could not
-          skew it, but the watch's own Unix clock did not come back accurate
-          enough to use, so I sent the offset instead and re-sent a correction
-          whenever the recorded start time changed.
+          Background clock starts at gun for the objective time. Runners
+          sometimes cross the starting line late, and sometimes corrections have
+          to be made mid-race. I wanted to use Unix time, but the Garmin watch's
+          internal Unix time was not accurate enough. Instead, each runner's
+          timer starts when they cross the start line and their delay from the
+          gun is also tracked and used when updating the timer.
         </p>
       </>
     ),
@@ -51,9 +43,8 @@ const derivations = [
     title: 'Time to go',
     children: (
       <p>
-        The projected finish minus the elapsed time. The projection is the pace
-        so far carried out to 26.2 miles, which is why it swings about early on
-        and settles as the distance behind it grows.
+        The projected finish minus the elapsed time. The projection is
+        extrapolated from pace so can be volatile early in the race.
       </p>
     ),
   },
@@ -62,11 +53,8 @@ const derivations = [
     title: 'Place',
     children: (
       <p>
-        This one was already in Brooksee's database, computed before I saw it,
-        so the app read it rather than working it out. It is the same shape of
-        question as the gap: your position in the ordered list of crossings at a
-        cable. The simulation above has no database to read it from, so it
-        derives it.
+        Already existed in the database, and can additionally be derived from
+        the number of rows existing for each checkpoint at time of crossing.
       </p>
     ),
   },
@@ -75,10 +63,8 @@ const derivations = [
     title: 'Pace and distance',
     children: (
       <p>
-        Straight off the crossing. The timing system knows where each cable is
-        on the course and when you crossed it, so distance is the cable's own
-        and pace is that distance over the time it took you. Both are the
-        runner's average to that point, not what they are running now.
+        Distance between each cable is known beforehand, and is used to
+        calculate distance and pace as checkpoints are crossed.
       </p>
     ),
   },
@@ -96,19 +82,20 @@ export function BrookseePage() {
       {/* The simulation first and the write-up under it. This page used to
           open with six paragraphs, which is a wall to arrive at, and it
           buried the one thing here that explains itself without being read. */}
-      <CaseStudySection heading="A race, simulated" prose={false}>
+      <CaseStudySection heading="Simulated Race" prose={false}>
         <div className="prose">
           <p>
             Brooksee times road races. Their timing points are a cable rather
-            than a mat, cheap and quick enough to lay that a marathon can carry
-            a hundred of them. I spent an internship turning the stream of
-            crossings that produces into something a runner could read off their
-            wrist mid-race.
+            than a mat, cheap and quick enough to lay a hundred of them over the
+            course of a marathon. I spent an internship taking the data captured
+            at every checkpoint and putting it onto runners' wrists in real
+            time.
           </p>
           <p>
-            Eight runners, twenty timing points, played at a hundred times real
-            speed. Pick a runner to see their watch. Every value on it but the
-            timer is frozen at the last cable they crossed.
+            Here is a simulated race with eight runners, and twenty timing
+            points, played at a hundred times real speed. Pick a runner to see
+            how their watch changes throughout the race. Every value on it but
+            the timer is updated at each cable they cross.
           </p>
         </div>
         <RaceSimulation />
@@ -130,26 +117,13 @@ export function BrookseePage() {
           a participant id, which point it was, and the time of day.
         </p>
         <p>
-          A runner in the middle of that race sees none of it. Their watch knows
-          its own GPS pace and distance, and nothing about the race going on
-          around them. Most of what you would want to know at mile 18 already
-          existed in a database with no way to reach your wrist.
-        </p>
-        <p>
-          My goal was taking that snapshot data and finding ways to manufacture
-          useful information out of it. The snapshots arrive already ordered by
-          crossing time, and that ordering is where the information was.
-        </p>
-        <p>
-          A Connect IQ data field is not an app. It takes a slot on Garmin's own
-          activity screen, beside the native pace and heart rate, and the runner
-          picks what goes where. I wrote eight of them one value at a time
-          before deciding that was the wrong shape. A runner mid-marathon gets
-          one glance, so the useful thing is a single field carrying several
-          numbers at once. Which six belong there depends on the runner, and
-          more variants were planned than I built: someone chasing a qualifying
-          time wants place and the margin to the cutoff, someone racing a rival
-          wants that rival's splits instead of their own.
+          This was used for family members or other supporters to see how their
+          runner was progressing. My goal was to take that information and get
+          it on people's wrists in real time so that they can make decisions
+          based on that data to improve their performance. This challenge was
+          broken into two main parts: getting the data from Firestore to the
+          watch, and then turning that data into useful information for the
+          runner.
         </p>
         <p>
           The cable, the timing points and the Firestore schema were Brooksee's.
@@ -163,13 +137,14 @@ export function BrookseePage() {
           The gap to the runner ahead is whoever crossed your checkpoint before
           you did, ranked by crossing time. If they have been overtaken since,
           your watch is telling you about someone who is no longer ahead of you.
+          Projection numbers are also finicky when strictly based on pace, and
+          can become inaccurate from early uphill parts for example.
         </p>
         <p>
           A Garmin mid-race has no route to Firestore of its own, so the phone
-          in the runner's pocket is a required part of the system rather than a
-          convenience. If it dies or drops Bluetooth, the watch goes on showing
-          the last values it received, with nothing on screen to say they have
-          stopped arriving.
+          in the runner's pocket is a required part of the system. If it dies or
+          drops Bluetooth, the watch goes on showing the last values it
+          received, with nothing on screen to say they have stopped arriving.
         </p>
         <p>
           It only ever ran on a Forerunner 255. The field is drawn at fixed
