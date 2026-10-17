@@ -13,6 +13,13 @@ export interface RouteMeta {
   path: string
   title: string
   description: string
+  /** The card image for this route, absolute. Falls back to OG_IMAGE.
+   *
+   * Worth overriding only where a route's own card would otherwise repeat
+   * one already in circulation: a link to /resume posted beside a link to
+   * the site itself unfurls as the same picture twice, which costs a slot
+   * in a feed and says nothing the first card did not. */
+  image?: string
 }
 
 /** Title and description for every route, in one table.
@@ -75,6 +82,9 @@ export const ROUTE_META: RouteMeta[] = [
     title: `Resume & contact${suffix}`,
     description:
       'Resume, email, LinkedIn and GitHub for Blake Grudzien. Open to backend, platform, and data engineering roles.',
+    // The resume itself, cropped to a card. Generated from the published
+    // PDF by scripts/build-resume-preview.sh, so it cannot drift from it.
+    image: `${SITE_URL}/resume-og.jpg`,
   },
 ]
 

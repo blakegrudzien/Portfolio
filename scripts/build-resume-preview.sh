@@ -14,6 +14,7 @@ cd "$(dirname "$0")/.."
 
 PDF="public/Blake_Grudzien_Resume.pdf"
 OUT="public/Blake_Grudzien_Resume.webp"
+OG="public/resume-og.jpg"
 CONST="src/pages/resume/resumePreview.ts"
 # 200 DPI so the page stays sharp on a high-density screen at the width it
 # is displayed; q68 because text compresses well and the difference above
@@ -56,5 +57,24 @@ export const RESUME_PDF_SHA256 =
   '$HASH'
 TS
 
+# The link card for /resume.
+#
+# The resume itself rather than the site's shared og.jpg, because a link to
+# /resume posted next to a link to the site unfurls as the same picture
+# twice. Cropped to the top of the page at the card's own aspect ratio: the
+# whole page letterboxed into 1200x630 is 487px wide and illegible, whereas
+# the top third carries the name at a size that survives a feed thumbnail.
+#
+# Cropped by pdftoppm at render time rather than afterwards, because sips
+# crops from the centre and there is no ImageMagick here. Inset and padded
+# in the site's background colour so a white document does not read as a
+# blank card against a white feed. JPEG, not WebP, for the same reason
+# index.html gives: crawler support for WebP is still uneven.
+pdftoppm -png -r "$DPI" -x 0 -y 0 -W 1700 -H 893 -singlefile "$PDF" "$TMP/og" 2>/dev/null
+sips -z 605 1152 "$TMP/og.png" --out "$TMP/og-scaled.png" >/dev/null 2>&1
+sips -p 630 1200 --padColor FBFAF8 "$TMP/og-scaled.png" --out "$TMP/og-card.png" >/dev/null 2>&1
+sips -s format jpeg -s formatOptions 55 "$TMP/og-card.png" --out "$OG" >/dev/null 2>&1
+
 echo "wrote $OUT ($(ls -l "$OUT" | awk '{printf "%.0f KB", $5/1024}'), ${WIDTH}x${HEIGHT})"
+echo "wrote $OG ($(ls -l "$OG" | awk '{printf "%.0f KB", $5/1024}'), 1200x630)"
 echo "wrote $CONST"

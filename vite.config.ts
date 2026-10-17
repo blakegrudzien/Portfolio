@@ -73,7 +73,7 @@ function applyMeta(template: string, meta: RouteMeta): string {
   return replaceTag(
     html,
     /<meta\s+property="og:image"\s+content="[\s\S]*?"\s*\/>/,
-    `<meta property="og:image" content="${OG_IMAGE}" />`,
+    `<meta property="og:image" content="${meta.image ?? OG_IMAGE}" />`,
   )
 }
 
